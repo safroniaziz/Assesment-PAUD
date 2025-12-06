@@ -74,25 +74,25 @@
 <div class="bg-white rounded-2xl shadow-xl p-6 mb-8">
     <h3 class="text-2xl font-bold text-gray-800 mb-6">Analitik Skor</h3>
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <!-- Skor Tertinggi per Siswa -->
-        <div class="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl p-6 border border-blue-100">
+        <!-- Kategori Kematangan Siswa -->
+        <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
             <h4 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
-                <i class="fas fa-trophy text-blue-600 mr-2"></i>
-                Skor Tertinggi per Siswa
+                <i class="fas fa-chart-line text-blue-600 mr-2"></i>
+                Kategori Kematangan Siswa
             </h4>
             <div style="height: 300px;">
                 <canvas id="topStudentsChart"></canvas>
             </div>
         </div>
 
-        <!-- Skor per Kategori -->
+        <!-- Distribusi Kategori Kematangan -->
         <div class="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-6 border border-purple-100">
             <h4 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
                 <i class="fas fa-chart-pie text-purple-600 mr-2"></i>
-                Skor Rata-rata per Kategori
+                Distribusi Kategori Kematangan
             </h4>
             <div style="height: 300px;">
-                <canvas id="categoryChart"></canvas>
+                <canvas id="maturityChart"></canvas>
             </div>
         </div>
     </div>
@@ -107,57 +107,89 @@
         </a>
     </div>
     <div class="overflow-x-auto">
-        <table class="min-w-full">
-            <thead>
-                <tr class="bg-gradient-to-r from-purple-50 to-indigo-50">
-                    <th class="px-6 py-4 text-left text-sm font-bold text-gray-700">Siswa</th>
-                    <th class="px-6 py-4 text-left text-sm font-bold text-gray-700">Usia</th>
-                    <th class="px-6 py-4 text-left text-sm font-bold text-gray-700">Tanggal</th>
-                    <th class="px-6 py-4 text-left text-sm font-bold text-gray-700">Status</th>
-                    <th class="px-6 py-4 text-left text-sm font-bold text-gray-700">Aksi</th>
+        <table class="w-full">
+            <thead class="bg-gray-50 border-b border-gray-200">
+                <tr>
+                    <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Siswa
+                    </th>
+                    <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Kategori Kematangan
+                    </th>
+                    <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Usia
+                    </th>
+                    <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Tanggal
+                    </th>
+                    <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Status
+                    </th>
+                    <th class="px-6 py-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Aksi
+                    </th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-gray-100">
+            <tbody class="divide-y divide-gray-200">
                 @forelse($recentSessions as $session)
-                <tr class="hover:bg-purple-50 transition-colors">
-                    <td class="px-6 py-4">
+                <tr class="hover:bg-gray-50 transition-colors">
+                    <td class="px-6 py-4 whitespace-nowrap">
                         <div class="flex items-center">
-                            <div class="bg-purple-100 rounded-full w-10 h-10 flex items-center justify-center mr-3">
-                                <i class="fas fa-user text-purple-600"></i>
+                            <div class="h-10 w-10 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white font-bold">
+                                {{ Str::upper(substr($session->student->name, 0, 1)) }}
                             </div>
-                            <span class="font-semibold text-gray-800">{{ $session->student->name }}</span>
+                            <div class="ml-3">
+                                <p class="text-sm font-medium text-gray-900">{{ $session->student->name }}</p>
+                                <p class="text-xs text-gray-500">{{ $session->student->nis ?? '-' }}</p>
+                            </div>
                         </div>
                     </td>
-                    <td class="px-6 py-4 text-gray-600">{{ $session->age_years }} tahun {{ $session->age_months }} bulan</td>
-                    <td class="px-6 py-4 text-gray-600">{{ $session->created_at->format('d M Y H:i') }}</td>
-                    <td class="px-6 py-4">
-                        @if($session->completed_at)
-                            <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-semibold">
-                                <i class="fas fa-check-circle mr-1"></i>Selesai
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        @if($session->maturity_category)
+                            @php
+                                $maturityBadge = [
+                                    'matang' => ['bg' => 'bg-green-100', 'text' => 'text-green-800', 'label' => 'Matang'],
+                                    'cukup_matang' => ['bg' => 'bg-blue-100', 'text' => 'text-blue-800', 'label' => 'Cukup Matang'],
+                                    'kurang_matang' => ['bg' => 'bg-yellow-100', 'text' => 'text-yellow-800', 'label' => 'Kurang Matang'],
+                                    'tidak_matang' => ['bg' => 'bg-red-100', 'text' => 'text-red-800', 'label' => 'Tidak Matang'],
+                                ];
+                                $badge = $maturityBadge[$session->maturity_category] ?? ['bg' => 'bg-gray-100', 'text' => 'text-gray-800', 'label' => '-'];
+                            @endphp
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $badge['bg'] }} {{ $badge['text'] }}">
+                                {{ $badge['label'] }}
                             </span>
                         @else
-                            <span class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-semibold">
-                                <i class="fas fa-clock mr-1"></i>Berlangsung
-                            </span>
+                            <span class="text-gray-400 text-xs">-</span>
                         @endif
                     </td>
-                    <td class="px-6 py-4">
-                        @if($session->completed_at)
-                            <a href="{{ route('teacher.results.show', $session->student) }}" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors text-sm font-semibold">
-                                <i class="fas fa-eye mr-1"></i>Lihat Hasil
-                            </a>
-                        @else
-                            <span class="text-gray-400 text-sm">Menunggu selesai</span>
-                        @endif
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="text-sm text-gray-900">{{ $session->age_years }} tahun {{ $session->age_months }} bulan</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">{{ $session->created_at->format('d M Y') }}</div>
+                        <div class="text-xs text-gray-500">{{ $session->created_at->format('H:i') }}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            <i class="fas fa-check-circle mr-1"></i>Selesai
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-center">
+                        <a href="{{ route('teacher.results.show', $session->student) }}"
+                           class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-purple-600 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors">
+                            <i class="fas fa-eye mr-1"></i>
+                            Lihat Detail
+                        </a>
                     </td>
                 </tr>
                 @empty
                 <tr>
                     <td colspan="5" class="px-6 py-12 text-center">
-                        <div class="bg-gray-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                            <i class="fas fa-clipboard-list text-3xl text-gray-400"></i>
+                        <div class="text-gray-400">
+                            <i class="fas fa-clipboard-list text-5xl mb-4"></i>
+                            <p class="text-lg font-medium">Belum Ada Data Asesmen</p>
+                            <p class="text-sm">Mulai asesmen untuk melihat hasilnya di sini</p>
                         </div>
-                        <p class="text-gray-500">Belum ada asesmen</p>
                     </td>
                 </tr>
                 @endforelse
@@ -170,25 +202,44 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Top Students Chart - Horizontal Bar Chart
-    const topStudentsCtx = document.getElementById('topStudentsChart').getContext('2d');
-    const topStudentsData = {!! json_encode($topStudents) !!};
+    // Top Students Chart - Line Chart with Maturity Categories
+    const topCtx = document.getElementById('topStudentsChart').getContext('2d');
+    const topData = {!! json_encode($topStudents) !!};
 
-    new Chart(topStudentsCtx, {
-        type: 'bar',
+    // Color mapping for maturity categories
+    const maturityColors = {
+        'matang': 'rgb(34, 197, 94)',           // green
+        'cukup_matang': 'rgb(59, 130, 246)',    // blue
+        'kurang_matang': 'rgb(251, 191, 36)',   // yellow
+        'tidak_matang': 'rgb(239, 68, 68)'      // red
+    };
+
+    new Chart(topCtx, {
+        type: 'line',
         data: {
-            labels: topStudentsData.map(s => s.name),
+            labels: topData.map(s => s.name),
             datasets: [{
-                label: 'Skor Rata-rata',
-                data: topStudentsData.map(s => s.score),
-                backgroundColor: 'rgba(59, 130, 246, 0.8)',
-                borderColor: 'rgb(59, 130, 246)',
-                borderWidth: 2,
-                borderRadius: 6
+                label: 'Kategori Kematangan',
+                data: topData.map(s => s.maturity_value),
+                borderColor: 'rgb(239, 68, 68)',
+                backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                borderWidth: 3,
+                tension: 0.4,
+                pointBackgroundColor: topData.map(s => maturityColors[s.maturity_category] || 'rgb(0, 0, 0)'),
+                pointBorderColor: topData.map(s => maturityColors[s.maturity_category] || 'rgb(0, 0, 0)'),
+                pointRadius: 8,
+                pointHoverRadius: 10,
+                fill: false,
+                segment: {
+                    borderColor: ctx => {
+                        // Color the line segment based on the ending point's category
+                        const index = ctx.p1DataIndex;
+                        return topData[index] ? maturityColors[topData[index].maturity_category] : 'rgb(239, 68, 68)';
+                    }
+                }
             }]
         },
         options: {
-            indexAxis: 'y',
             responsive: true,
             maintainAspectRatio: true,
             aspectRatio: 1.5,
@@ -201,56 +252,82 @@ document.addEventListener('DOMContentLoaded', function() {
                     padding: 12,
                     callbacks: {
                         label: function(context) {
-                            return 'Skor: ' + context.parsed.x + '%';
+                            const student = topData[context.dataIndex];
+                            return student.name + ': ' + student.maturity_label;
                         }
                     }
                 }
             },
             scales: {
-                x: {
-                    beginAtZero: true,
-                    max: 100,
+                y: {
+                    min: 0,
+                    max: 5,
                     grid: {
-                        color: 'rgba(0, 0, 0, 0.05)'
+                        color: 'rgba(0, 0, 0, 0.1)',
+                        borderDash: [5, 5]
                     },
                     ticks: {
+                        stepSize: 1,
                         callback: function(value) {
-                            return value + '%';
+                            const labels = {
+                                0: '',
+                                1: 'Tidak Matang',
+                                2: 'Kurang Matang',
+                                3: 'Cukup Matang',
+                                4: 'Matang',
+                                5: ''
+                            };
+                            return labels[value] || '';
+                        }
+                    },
+                    title: {
+                        display: true,
+                        text: 'Kategori Kematangan',
+                        font: {
+                            size: 12
                         }
                     }
                 },
-                y: {
+                x: {
                     grid: {
                         display: false
+                    },
+                    ticks: {
+                        maxRotation: 45,
+                        minRotation: 45
+                    },
+                    title: {
+                        display: true,
+                        text: 'Nama Siswa',
+                        font: {
+                            size: 12
+                        }
                     }
                 }
             }
         }
     });
 
-    // Category Chart - Bar Chart
-    const categoryCtx = document.getElementById('categoryChart').getContext('2d');
-    const categoryData = {!! json_encode($categoryScores) !!};
+    // Maturity Distribution Chart - Line Chart
+    const maturityCtx = document.getElementById('maturityChart').getContext('2d');
+    const maturityData = {!! json_encode($maturityDistribution) !!};
 
-    new Chart(categoryCtx, {
-        type: 'bar',
+    new Chart(maturityCtx, {
+        type: 'line',
         data: {
-            labels: categoryData.map(c => c.name),
+            labels: maturityData.map(m => m.category),
             datasets: [{
-                label: 'Skor Rata-rata',
-                data: categoryData.map(c => c.score),
-                backgroundColor: [
-                    'rgba(139, 92, 246, 0.8)',
-                    'rgba(236, 72, 153, 0.8)',
-                    'rgba(16, 185, 129, 0.8)'
-                ],
-                borderColor: [
-                    'rgb(139, 92, 246)',
-                    'rgb(236, 72, 153)',
-                    'rgb(16, 185, 129)'
-                ],
-                borderWidth: 2,
-                borderRadius: 8
+                label: 'Jumlah Siswa',
+                data: maturityData.map(m => m.count),
+                borderColor: 'rgb(239, 68, 68)',
+                backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                borderWidth: 3,
+                tension: 0.4,
+                pointBackgroundColor: 'rgb(0, 0, 0)',
+                pointBorderColor: 'rgb(0, 0, 0)',
+                pointRadius: 6,
+                pointHoverRadius: 8,
+                fill: false
             }]
         },
         options: {
@@ -266,7 +343,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     padding: 12,
                     callbacks: {
                         label: function(context) {
-                            return 'Skor: ' + context.parsed.y + '%';
+                            return context.label + ': ' + context.parsed.y + ' siswa';
                         }
                     }
                 }
@@ -274,19 +351,34 @@ document.addEventListener('DOMContentLoaded', function() {
             scales: {
                 y: {
                     beginAtZero: true,
-                    max: 100,
                     grid: {
-                        color: 'rgba(0, 0, 0, 0.05)'
+                        color: 'rgba(0, 0, 0, 0.1)',
+                        borderDash: [5, 5]
                     },
                     ticks: {
                         callback: function(value) {
-                            return value + '%';
+                            return value;
+                        },
+                        stepSize: 1
+                    },
+                    title: {
+                        display: true,
+                        text: 'Banyak Siswa',
+                        font: {
+                            size: 12
                         }
                     }
                 },
                 x: {
                     grid: {
                         display: false
+                    },
+                    title: {
+                        display: true,
+                        text: 'Kategori Kematangan',
+                        font: {
+                            size: 12
+                        }
                     }
                 }
             }

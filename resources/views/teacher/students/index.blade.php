@@ -125,7 +125,7 @@
     </div>
 
     <div id="studentsTableContainer">
-        @include('teacher.students.partials.table', ['students' => $students, 'class' => $class])
+        @include('teacher.students.partials.new_table', ['students' => $students, 'class' => $class])
     </div>
 </div>
 @else

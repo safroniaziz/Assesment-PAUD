@@ -78,7 +78,6 @@ class QuestionController extends Controller
             'choices' => 'required|array|min:2|max:6',
             'choices.*.image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
             'choices.*.is_correct' => 'nullable|boolean',
-            'choices.*.score' => 'required|numeric|min:0|max:100',
         ], [
             'aspect_id.required' => 'Aspek penilaian wajib diisi.',
             'aspect_id.exists' => 'Aspek penilaian yang dipilih tidak valid.',
@@ -93,10 +92,6 @@ class QuestionController extends Controller
             'choices.*.image.image' => 'Gambar pilihan harus berupa gambar.',
             'choices.*.image.mimes' => 'Gambar pilihan harus berformat JPG, JPEG, PNG, atau WEBP.',
             'choices.*.image.max' => 'Gambar pilihan tidak boleh lebih dari 2MB.',
-            'choices.*.score.required' => 'Skor pilihan wajib diisi.',
-            'choices.*.score.numeric' => 'Skor pilihan harus berupa angka.',
-            'choices.*.score.min' => 'Skor pilihan minimal 0.',
-            'choices.*.score.max' => 'Skor pilihan maksimal 100.',
         ]);
 
         // Validate that all choices have images (either new upload or temp file)
@@ -117,40 +112,24 @@ class QuestionController extends Controller
             }
         }
 
-        // Validate total score must be exactly 100%
-        $totalScore = 0;
+        // Pastikan hanya ada satu jawaban benar
+        $correctCount = 0;
         foreach ($request->choices as $choiceData) {
-            if (isset($choiceData['score'])) {
-                $totalScore += (float) $choiceData['score'];
+            if (!empty($choiceData['is_correct'])) {
+                $correctCount++;
             }
         }
-
-        if (abs($totalScore - 100) > 0.01) {
-            // Store files temporarily in session for reuse after validation failure
-            if ($request->hasFile('question_image')) {
-                $tempPath = $request->file('question_image')->store('temp', 'public');
-                session(['temp_question_image' => $tempPath]);
-            }
-
-            foreach ($request->choices as $index => $choiceData) {
-                if ($request->hasFile("choices.{$index}.image")) {
-                    $tempPath = $request->file("choices.{$index}.image")->store('temp', 'public');
-                    $tempChoiceImages = session('temp_choice_images', []);
-                    $tempChoiceImages[$index] = $tempPath;
-                    session(['temp_choice_images' => $tempChoiceImages]);
-                }
-            }
-
+        if ($correctCount !== 1) {
             if ($request->expectsJson() || $request->ajax()) {
                 return response()->json([
-                    'message' => 'Total skor dari semua pilihan harus tepat 100%. Total saat ini: ' . number_format($totalScore, 2) . '%.',
-                    'errors' => ['choices' => ['Total skor dari semua pilihan harus tepat 100%. Total saat ini: ' . number_format($totalScore, 2) . '%.']]
+                    'message' => 'Harus ada tepat satu pilihan yang ditandai sebagai jawaban benar.',
+                    'errors' => ['choices' => ['Harus ada tepat satu pilihan yang ditandai sebagai jawaban benar.']]
                 ], 422);
             }
 
             return redirect()->back()
                 ->withInput()
-                ->withErrors(['choices' => 'Total skor dari semua pilihan harus tepat 100%. Total saat ini: ' . number_format($totalScore, 2) . '%']);
+                ->withErrors(['choices' => 'Harus ada tepat satu pilihan yang ditandai sebagai jawaban benar.']);
         }
 
         // Upload and resize question image (4:3 ratio)
@@ -189,8 +168,7 @@ class QuestionController extends Controller
             QuestionChoice::create([
                 'question_id' => $question->id,
                 'choice_image_path' => $choiceImagePath,
-                'is_correct' => isset($choiceData['is_correct']) && $choiceData['is_correct'] == '1',
-                'score' => $choiceData['score'] ?? 0,
+                'is_correct' => !empty($choiceData['is_correct']),
                 'order' => $index,
             ]);
         }
@@ -228,7 +206,6 @@ class QuestionController extends Controller
             'choices' => 'required|array|min:2|max:6',
             'choices.*.image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
             'choices.*.is_correct' => 'nullable|boolean',
-            'choices.*.score' => 'required|numeric|min:0|max:100',
         ], [
             'aspect_id.required' => 'Aspek penilaian wajib diisi.',
             'aspect_id.exists' => 'Aspek penilaian yang dipilih tidak valid.',
@@ -242,10 +219,6 @@ class QuestionController extends Controller
             'choices.*.image.image' => 'Gambar pilihan harus berupa gambar.',
             'choices.*.image.mimes' => 'Gambar pilihan harus berformat JPG, JPEG, PNG, atau WEBP.',
             'choices.*.image.max' => 'Gambar pilihan tidak boleh lebih dari 2MB.',
-            'choices.*.score.required' => 'Skor pilihan wajib diisi.',
-            'choices.*.score.numeric' => 'Skor pilihan harus berupa angka.',
-            'choices.*.score.min' => 'Skor pilihan minimal 0.',
-            'choices.*.score.max' => 'Skor pilihan maksimal 100.',
         ]);
 
         // Validate that all choices have images (either existing, new upload, or temp file)
@@ -268,40 +241,24 @@ class QuestionController extends Controller
             }
         }
 
-        // Validate total score must be exactly 100%
-        $totalScore = 0;
+        // Pastikan hanya ada satu jawaban benar
+        $correctCount = 0;
         foreach ($request->choices as $choiceData) {
-            if (isset($choiceData['score'])) {
-                $totalScore += (float) $choiceData['score'];
+            if (!empty($choiceData['is_correct'])) {
+                $correctCount++;
             }
         }
-
-        if (abs($totalScore - 100) > 0.01) {
-            // Store files temporarily in session for reuse after validation failure
-            if ($request->hasFile('question_image')) {
-                $tempPath = $request->file('question_image')->store('temp', 'public');
-                session(['temp_question_image' => $tempPath]);
-            }
-
-            foreach ($request->choices as $index => $choiceData) {
-                if ($request->hasFile("choices.{$index}.image")) {
-                    $tempPath = $request->file("choices.{$index}.image")->store('temp', 'public');
-                    $tempChoiceImages = session('temp_choice_images', []);
-                    $tempChoiceImages[$index] = $tempPath;
-                    session(['temp_choice_images' => $tempChoiceImages]);
-                }
-            }
-
+        if ($correctCount !== 1) {
             if ($request->expectsJson() || $request->ajax()) {
                 return response()->json([
-                    'message' => 'Total skor dari semua pilihan harus tepat 100%. Total saat ini: ' . number_format($totalScore, 2) . '%.',
-                    'errors' => ['choices' => ['Total skor dari semua pilihan harus tepat 100%. Total saat ini: ' . number_format($totalScore, 2) . '%.']]
+                    'message' => 'Harus ada tepat satu pilihan yang ditandai sebagai jawaban benar.',
+                    'errors' => ['choices' => ['Harus ada tepat satu pilihan yang ditandai sebagai jawaban benar.']]
                 ], 422);
             }
 
             return redirect()->back()
                 ->withInput()
-                ->withErrors(['choices' => 'Total skor dari semua pilihan harus tepat 100%. Total saat ini: ' . number_format($totalScore, 2) . '%']);
+                ->withErrors(['choices' => 'Harus ada tepat satu pilihan yang ditandai sebagai jawaban benar.']);
         }
 
         $data = [
@@ -363,8 +320,7 @@ class QuestionController extends Controller
                 // Update existing choice
                 QuestionChoice::where('id', $choiceId)->update([
                     'choice_image_path' => $choiceImagePath,
-                    'is_correct' => isset($choiceData['is_correct']) && $choiceData['is_correct'] == '1',
-                    'score' => $choiceData['score'] ?? 0,
+                    'is_correct' => !empty($choiceData['is_correct']),
                     'order' => $index,
                 ]);
             } else {
@@ -372,8 +328,7 @@ class QuestionController extends Controller
                 QuestionChoice::create([
                     'question_id' => $question->id,
                     'choice_image_path' => $choiceImagePath,
-                    'is_correct' => isset($choiceData['is_correct']) && $choiceData['is_correct'] == '1',
-                    'score' => $choiceData['score'] ?? 0,
+                    'is_correct' => !empty($choiceData['is_correct']),
                     'order' => $index,
                 ]);
             }

@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             AssessmentAspectSeeder::class,
+            AspectThresholdSeeder::class,
             PsychologistUserSeeder::class,
             TeacherUserSeeder::class,
             ClassRoomSeeder::class,
@@ -24,7 +25,7 @@ class DatabaseSeeder extends Seeder
             ScoringRuleSeeder::class,
             RecommendationSeeder::class,
             QuestionSeeder::class,
-            // AssessmentAnswerSeeder::class, // Uncomment if you want sample assessment data
+            // AssessmentSampleDataSeeder::class, // Uncomment to seed sample assessment data
         ]);
     }
 }

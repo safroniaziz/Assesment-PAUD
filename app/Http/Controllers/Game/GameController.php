@@ -52,12 +52,34 @@ class GameController extends Controller
      */
     public function start(Request $request, $studentId)
     {
-        $request->validate([
-            'age_years' => 'required|integer|min:4|max:7',
-            'age_months' => 'required|integer|min:0|max:11',
-        ]);
-
         $student = Student::findOrFail($studentId);
+
+        // If student already has birth_date, calculate age from it
+        if ($student->birth_date) {
+            $birthDate = \Carbon\Carbon::parse($student->birth_date);
+            $age = $birthDate->diff(now());
+            $ageYears = $age->y;
+            $ageMonths = $age->m;
+        } else {
+            // Validate birth_date input
+            $request->validate([
+                'birth_date' => 'required|date|before:today|after:' . now()->subYears(10)->format('Y-m-d'),
+            ], [
+                'birth_date.required' => 'Tanggal lahir harus diisi',
+                'birth_date.date' => 'Format tanggal tidak valid',
+                'birth_date.before' => 'Tanggal lahir harus sebelum hari ini',
+                'birth_date.after' => 'Tanggal lahir tidak valid untuk usia PAUD',
+            ]);
+
+            // Save birth_date to student (one-time)
+            $student->update(['birth_date' => $request->birth_date]);
+
+            // Calculate age from the new birth_date
+            $birthDate = \Carbon\Carbon::parse($request->birth_date);
+            $age = $birthDate->diff(now());
+            $ageYears = $age->y;
+            $ageMonths = $age->m;
+        }
 
         // Mark all previous incomplete sessions for this student as abandoned
         AssessmentSession::where('student_id', $student->id)
@@ -65,17 +87,20 @@ class GameController extends Controller
             ->whereNull('abandoned_at')
             ->update(['abandoned_at' => now()]);
 
-        // Create assessment session
+        // Create assessment session with calculated age
         $session = AssessmentSession::create([
             'student_id' => $student->id,
-            'age_years' => $request->age_years,
-            'age_months' => $request->age_months,
-            'total_age_months' => ($request->age_years * 12) + $request->age_months,
+            'age_years' => $ageYears,
+            'age_months' => $ageMonths,
+            'total_age_months' => ($ageYears * 12) + $ageMonths,
             'started_at' => now(),
         ]);
 
-        // Store session ID in the session
-        session(['assessment_session_id' => $session->id]);
+        // Store session ID and reset pending answers in the session
+        session([
+            'assessment_session_id' => $session->id,
+            'assessment_answers' => [],
+        ]);
 
         return redirect()->route('game.play');
     }
@@ -125,20 +150,33 @@ class GameController extends Controller
 
         Log::info('Assessment Play - Valid questions count: ' . $questions->count());
 
-        // Get answered question IDs
-        $answeredQuestionIds = $session->answers()->pluck('question_id')->toArray();
+        // Ambil jawaban SEMENTARA dari session (belum disimpan ke database)
+        $pendingAnswers = session('assessment_answers', []);
+        $answeredQuestionIds = collect($pendingAnswers)->pluck('question_id')->all();
 
-        // Find next unanswered question
+        // Cari soal berikutnya yang belum dijawab (berdasarkan data di session)
         $currentQuestion = $questions->first(function ($question) use ($answeredQuestionIds) {
             return !in_array($question->id, $answeredQuestionIds);
         });
 
-        // If no more questions, complete the assessment
+        // Jika semua soal sudah dijawab -> baru simpan ke database SEKALIGUS
         if (!$currentQuestion) {
-            // Mark session as completed
-            if (!$session->completed_at) {
+            if (!$session->completed_at && !empty($pendingAnswers)) {
+                foreach ($pendingAnswers as $answer) {
+                    $this->assessmentService->saveAnswer(
+                        $session,
+                        $answer['question_id'],
+                        $answer['choice_id']
+                    );
+                }
+
+                // Hitung hasil & tandai selesai
                 $this->assessmentService->calculateResults($session);
+
+                // Bersihkan jawaban sementara dari session
+                session()->forget('assessment_answers');
             }
+
             return redirect()->route('game.complete');
         }
 
@@ -167,15 +205,24 @@ class GameController extends Controller
             'choice_id' => 'required|exists:question_choices,id',
         ]);
 
-        $sessionId = session('assessment_session_id');
-        $session = AssessmentSession::findOrFail($sessionId);
+        // Simpan jawaban SEMENTARA di session saja.
+        // Belum disimpan ke database. Database baru diisi saat semua soal selesai.
+        $answers = session('assessment_answers', []);
 
-        // Save the answer
-        $this->assessmentService->saveAnswer(
-            $session,
-            $request->question_id,
-            $request->choice_id
-        );
+        // Hapus jawaban lama untuk question_id yang sama (kalau user ganti pilihan lalu kembali)
+        $answers = collect($answers)
+            ->reject(function ($item) use ($request) {
+                return $item['question_id'] == $request->question_id;
+            })
+            ->values()
+            ->all();
+
+        $answers[] = [
+            'question_id' => (int) $request->question_id,
+            'choice_id'   => (int) $request->choice_id,
+        ];
+
+        session(['assessment_answers' => $answers]);
 
         return response()->json(['success' => true]);
     }
@@ -193,13 +240,29 @@ class GameController extends Controller
 
         $session = AssessmentSession::findOrFail($sessionId);
 
-        // Calculate results if not already done
+        // Jika karena suatu alasan hasil belum dihitung, hitung di sini (fallback)
         if (!$session->completed_at) {
+            // PENTING: Simpan jawaban dari session ke database dulu sebelum hitung hasil
+            $pendingAnswers = session('assessment_answers', []);
+
+            if (!empty($pendingAnswers)) {
+                Log::info('Complete - Saving ' . count($pendingAnswers) . ' pending answers to database');
+
+                foreach ($pendingAnswers as $answer) {
+                    $this->assessmentService->saveAnswer(
+                        $session,
+                        $answer['question_id'],
+                        $answer['choice_id']
+                    );
+                }
+            }
+
+            // Sekarang baru hitung hasil
             $this->assessmentService->calculateResults($session);
         }
 
-        // Clear session
-        session()->forget('assessment_session_id');
+        // Clear session id dan jawaban sementara
+        session()->forget(['assessment_session_id', 'assessment_answers']);
 
         return view('game.complete', compact('session'));
     }

@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Models\AssessmentAspect;
 use App\Models\Recommendation;
 use Illuminate\Database\Seeder;
 
@@ -13,66 +12,22 @@ class RecommendationSeeder extends Seeder
      */
     public function run(): void
     {
-        // Get aspects
-        $kognitif = AssessmentAspect::where('name', 'Kognitif')->first();
-        $bahasa = AssessmentAspect::where('name', 'Bahasa')->first();
-        $sosialEmosional = AssessmentAspect::where('name', 'Sosial Emosional')->first();
-
-        if (!$kognitif || !$bahasa || !$sosialEmosional) {
-            $this->command->error('Assessment aspects not found. Please run AssessmentAspectSeeder first.');
-            return;
-        }
-
         $recommendations = [
-            // KOGNITIF
             [
-                'aspect_id' => $kognitif->id,
-                'category' => 'low',
-                'recommendation_text' => 'Anak perlu latihan lebih banyak dalam mengenal bentuk, warna, dan pola. Ajak anak bermain puzzle, menyusun balok, dan mengenal bentuk geometri. Berikan aktivitas yang melatih kemampuan berpikir dan memecahkan masalah secara bertahap.',
+                'maturity_category' => 'matang',
+                'recommendation_text' => 'Selamat! Perkembangan anak sangat baik di semua aspek. Anak sudah matang dan siap untuk masuk ke jenjang pendidikan selanjutnya. Pertahankan perkembangan ini dengan terus memberikan stimulasi yang sesuai, mendukung kegiatan belajar anak, dan memberikan kesempatan untuk mengeksplorasi hal-hal baru. Berikan tantangan yang lebih kompleks namun tetap menyenangkan untuk mengasah kemampuan anak lebih lanjut.',
             ],
             [
-                'aspect_id' => $kognitif->id,
-                'category' => 'medium',
-                'recommendation_text' => 'Perkembangan kognitif anak sudah cukup baik. Terus latih dengan permainan yang lebih menantang seperti puzzle kompleks, mengurutkan angka, dan mengenal pola. Berikan stimulasi yang sesuai dengan usia anak.',
+                'maturity_category' => 'cukup_matang',
+                'recommendation_text' => 'Perkembangan anak sudah cukup baik dengan beberapa aspek yang masih perlu ditingkatkan. Anak cukup matang untuk masuk ke jenjang pendidikan selanjutnya, namun masih memerlukan pendampingan ekstra pada aspek-aspek tertentu. Fokuskan perhatian pada aspek yang masih dalam kategori "cukup" dengan memberikan latihan tambahan, aktivitas yang menyenangkan, dan dukungan dari orang tua serta guru. Terus berikan motivasi dan pujian untuk meningkatkan kepercayaan diri anak.',
             ],
             [
-                'aspect_id' => $kognitif->id,
-                'category' => 'high',
-                'recommendation_text' => 'Perkembangan kognitif anak sangat baik! Pertahankan dengan memberikan aktivitas yang sesuai seperti permainan strategi, eksperimen sederhana, dan aktivitas yang melatih logika berpikir. Berikan tantangan yang lebih tinggi namun tetap menyenangkan.',
-            ],
-
-            // BAHASA
-            [
-                'aspect_id' => $bahasa->id,
-                'category' => 'low',
-                'recommendation_text' => 'Anak perlu latihan lebih banyak dalam mengenal huruf dan kata. Bacakan cerita setiap hari, ajak anak berbicara, dan perkenalkan kosa kata baru. Gunakan gambar dan benda nyata untuk membantu anak memahami konsep bahasa.',
+                'maturity_category' => 'kurang_matang',
+                'recommendation_text' => 'Perkembangan anak masih perlu ditingkatkan di beberapa aspek penting. Anak kurang matang dan disarankan untuk mendapatkan stimulasi tambahan sebelum masuk ke jenjang pendidikan selanjutnya. Berikan perhatian khusus pada aspek-aspek yang masih kurang dengan melakukan aktivitas rutin yang sesuai, konsultasi dengan psikolog atau ahli tumbuh kembang anak, dan melibatkan anak dalam kegiatan yang melatih aspek-aspek tersebut. Hindari memaksakan anak dan berikan dukungan emosional yang cukup. Pertimbangkan untuk memberikan waktu tambahan bagi anak untuk berkembang.',
             ],
             [
-                'aspect_id' => $bahasa->id,
-                'category' => 'medium',
-                'recommendation_text' => 'Perkembangan bahasa anak sudah cukup baik. Terus latih dengan membaca buku bersama, bercerita, dan mengajak anak berkomunikasi aktif. Perkenalkan huruf dan kata baru secara bertahap dan berikan pujian saat anak berhasil.',
-            ],
-            [
-                'aspect_id' => $bahasa->id,
-                'category' => 'high',
-                'recommendation_text' => 'Perkembangan bahasa anak sangat baik! Pertahankan dengan memberikan buku bacaan yang sesuai, aktivitas menulis sederhana, dan kesempatan untuk bercerita. Berikan tantangan dengan cerita yang lebih kompleks dan diskusi yang lebih mendalam.',
-            ],
-
-            // SOSIAL EMOSIONAL
-            [
-                'aspect_id' => $sosialEmosional->id,
-                'category' => 'low',
-                'recommendation_text' => 'Anak perlu latihan lebih banyak dalam berinteraksi dengan teman. Ajak anak bermain bersama, belajar berbagi, dan mengelola emosi. Berikan contoh perilaku yang baik dan ajarkan cara mengekspresikan perasaan dengan tepat.',
-            ],
-            [
-                'aspect_id' => $sosialEmosional->id,
-                'category' => 'medium',
-                'recommendation_text' => 'Perkembangan sosial emosional anak sudah cukup baik. Terus latih dengan aktivitas kelompok, permainan yang melibatkan kerja sama, dan diskusi tentang perasaan. Berikan kesempatan untuk berinteraksi dengan teman sebaya secara teratur.',
-            ],
-            [
-                'aspect_id' => $sosialEmosional->id,
-                'category' => 'high',
-                'recommendation_text' => 'Perkembangan sosial emosional anak sangat baik! Pertahankan dengan memberikan kesempatan berinteraksi, aktivitas kelompok yang lebih kompleks, dan peran sebagai pemimpin dalam kegiatan. Berikan tanggung jawab yang sesuai dengan usia anak.',
+                'maturity_category' => 'tidak_matang',
+                'recommendation_text' => 'Perkembangan anak perlu perhatian serius di semua aspek. Anak belum matang untuk masuk pendidikan selanjutnya dan sangat disarankan untuk mendapatkan intervensi segera. Segera konsultasikan dengan psikolog anak, terapis, atau ahli tumbuh kembang untuk mendapatkan program stimulasi yang tepat dan intensif. Berikan dukungan penuh dari keluarga, lakukan terapi atau program khusus yang direkomendasikan oleh ahli, dan pantau perkembangan anak secara berkala. Jangan ragu untuk memberikan waktu tambahan yang dibutuhkan anak untuk berkembang dengan baik. Dengan penanganan yang tepat dan konsisten, anak dapat mengejar ketertinggalan perkembangannya.',
             ],
         ];
 
@@ -80,6 +35,6 @@ class RecommendationSeeder extends Seeder
             Recommendation::create($recommendation);
         }
 
-        $this->command->info('Successfully created ' . count($recommendations) . ' recommendations!');
+        $this->command->info('Successfully created ' . count($recommendations) . ' maturity-based recommendations!');
     }
 }

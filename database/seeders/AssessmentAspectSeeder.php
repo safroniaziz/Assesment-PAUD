@@ -13,18 +13,10 @@ class AssessmentAspectSeeder extends Seeder
     public function run(): void
     {
         $aspects = [
-            [
-                'name' => 'Kognitif',
-                'description' => 'Aspek perkembangan kognitif meliputi kemampuan berpikir, memecahkan masalah, dan memahami konsep dasar.',
-            ],
-            [
-                'name' => 'Bahasa',
-                'description' => 'Aspek perkembangan bahasa meliputi kemampuan berbicara, mendengar, dan memahami komunikasi.',
-            ],
-            [
-                'name' => 'Sosial Emosional',
-                'description' => 'Aspek perkembangan sosial emosional meliputi kemampuan berinteraksi dengan orang lain dan mengelola emosi.',
-            ],
+            ['name' => 'Kognitif'],
+            ['name' => 'Membaca Permulaan'],
+            ['name' => 'Menulis Permulaan'],
+            ['name' => 'Sosial Emosional'],
         ];
 
         foreach ($aspects as $aspect) {

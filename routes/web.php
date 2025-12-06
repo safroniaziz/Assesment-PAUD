@@ -62,6 +62,8 @@ Route::middleware(['auth', 'teacher'])->prefix('teacher')->name('teacher.')->gro
     Route::get('/dashboard', [TeacherController::class, 'index'])->name('dashboard');
 
     // Class management (using modals, so no create/edit pages needed)
+    Route::post('/classes/bulk-delete', [ClassRoomController::class, 'bulkDelete'])->name('classes.bulk-delete');
+    Route::post('/classes/export', [ClassRoomController::class, 'export'])->name('classes.export');
     Route::resource('classes', ClassRoomController::class)->except(['create', 'edit']);
 
     // Student management

@@ -105,13 +105,10 @@
             <div class="mb-10">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <label class="form-label required mb-0">Pilihan Jawaban (2-6 pilihan)</label>
-                    <div id="total-score-indicator" class="badge badge-lg" style="font-size: 0.9rem;">
-                        <span id="total-score-text">Total Skor: <strong>{{ number_format($question->choices->sum('score'), 2) }}%</strong></span>
-                    </div>
                 </div>
-                <div class="alert alert-info d-none" id="score-alert" style="font-size: 0.875rem;">
+                <div class="alert alert-info" style="font-size: 0.875rem;">
                     <i class="fas fa-info-circle me-2"></i>
-                    <strong>Perhatian:</strong> Total skor dari semua pilihan harus tepat <strong>100%</strong>
+                    <strong>Catatan:</strong> Setiap soal harus memiliki <strong>tepat satu</strong> pilihan yang ditandai sebagai <strong>Jawaban Benar</strong>. Nilai akan dihitung dari jumlah jawaban benar (1) dan salah (0).
                 </div>
                 <div id="choices-container">
                     @foreach($question->choices->sortBy('order') as $index => $choice)
@@ -153,24 +150,13 @@
                                 <div id="choice_{{ $index }}_preview" class="mt-3"></div>
                             </div>
                             <div class="mb-5">
-                                <label class="form-label required">Score (0-100)</label>
-                                <input type="number"
-                                       name="choices[{{ $index }}][score]"
-                                       value="{{ old('choices.' . $index . '.score', $choice->score) }}"
-                                       min="0"
-                                       max="100"
-                                       step="0.01"
-                                       class="form-control form-control-solid choice-score-input"
-                                       data-choice-index="{{ $index }}"
-                                       onchange="updateTotalScore()"
-                                       oninput="updateTotalScore()">
-                                <div class="form-text">Persentase skor untuk pilihan ini (contoh: 25, 50, 75, 100)</div>
-                            </div>
-                            <div class="form-check form-check-custom form-check-solid">
-                                <input class="form-check-input" type="checkbox" name="choices[{{ $index }}][is_correct]" value="1" id="choice_{{ $index }}_correct" {{ old('choices.' . $index . '.is_correct', $choice->is_correct) ? 'checked' : '' }}>
-                                <label class="form-check-label" for="choice_{{ $index }}_correct">
-                                    Jawaban Benar
-                                </label>
+                                <label class="form-label d-block">Tandai Jawaban Benar</label>
+                                <div class="form-check form-check-custom form-check-solid">
+                                    <input class="form-check-input" type="checkbox" name="choices[{{ $index }}][is_correct]" value="1" id="choice_{{ $index }}_correct" {{ old('choices.' . $index . '.is_correct', $choice->is_correct) ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="choice_{{ $index }}_correct">
+                                        Jawaban Benar
+                                    </label>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -256,58 +242,6 @@ document.addEventListener('DOMContentLoaded', function() {
         questionImage: null,
         choices: {}
     };
-
-    // Function to calculate and update total score - must be in global scope
-    window.updateTotalScore = function() {
-    let total = 0;
-    const scoreInputs = document.querySelectorAll('.choice-score-input');
-
-    scoreInputs.forEach(function(input) {
-        const value = parseFloat(input.value) || 0;
-        total += value;
-    });
-
-    const indicator = document.getElementById('total-score-indicator');
-    const text = document.getElementById('total-score-text');
-    const alert = document.getElementById('score-alert');
-
-    if (text) {
-        text.innerHTML = `Total Skor: <strong>${total.toFixed(2)}%</strong>`;
-    }
-
-    if (indicator) {
-        // Update badge color based on total
-        indicator.classList.remove('badge-light-success', 'badge-light-warning', 'badge-light-danger');
-        if (Math.abs(total - 100) < 0.01) {
-            indicator.classList.add('badge-light-success');
-            if (alert) {
-                alert.classList.add('d-none');
-            }
-        } else if (total > 100) {
-            indicator.classList.add('badge-light-danger');
-            if (alert) {
-                alert.classList.remove('d-none');
-                alert.innerHTML = `
-                    <i class="fas fa-exclamation-circle me-2"></i>
-                    <strong>Perhatian:</strong> Total skor melebihi 100%! Kurangi skor pada pilihan.
-                `;
-                alert.classList.remove('alert-info');
-                alert.classList.add('alert-danger');
-            }
-        } else {
-            indicator.classList.add('badge-light-warning');
-            if (alert) {
-                alert.classList.remove('d-none');
-                alert.innerHTML = `
-                    <i class="fas fa-info-circle me-2"></i>
-                    <strong>Perhatian:</strong> Total skor belum mencapai 100%. Tambahkan skor pada pilihan.
-                `;
-                alert.classList.remove('alert-danger');
-                alert.classList.add('alert-info');
-            }
-        }
-    }
-};
 
 // Image preview function with 4:3 crop - must be in global scope for inline handlers
 window.previewImage = function(input, previewId) {
@@ -405,9 +339,7 @@ window.previewImage = function(input, previewId) {
     }
     };
 
-    // Initialize total score and event handlers on page load
-    updateTotalScore();
-
+    // Initialize event handlers on page load
     // Add remove handlers for existing choice items
     document.querySelectorAll('.remove-choice').forEach(function(button) {
         button.addEventListener('click', function() {
@@ -415,7 +347,6 @@ window.previewImage = function(input, previewId) {
             if (choiceItem) {
                 choiceItem.remove();
                 choiceCount--;
-                updateTotalScore();
             }
         });
     });
@@ -463,24 +394,13 @@ window.previewImage = function(input, previewId) {
                 <div id="choice_${choiceCount}_preview" class="mt-3"></div>
             </div>
             <div class="mb-5">
-                <label class="form-label required">Score (0-100)</label>
-                <input type="number"
-                       name="choices[${choiceCount}][score]"
-                       value="0"
-                       min="0"
-                       max="100"
-                       step="0.01"
-                       class="form-control form-control-solid choice-score-input"
-                       data-choice-index="${choiceCount}"
-                       onchange="updateTotalScore()"
-                       oninput="updateTotalScore()">
-                <div class="form-text">Persentase skor untuk pilihan ini (contoh: 25, 50, 75, 100)</div>
-            </div>
-            <div class="form-check form-check-custom form-check-solid">
-                <input class="form-check-input" type="checkbox" name="choices[${choiceCount}][is_correct]" value="1" id="choice_${choiceCount}_correct">
-                <label class="form-check-label" for="choice_${choiceCount}_correct">
-                    Jawaban Benar
-                </label>
+                <label class="form-label d-block">Tandai Jawaban Benar</label>
+                <div class="form-check form-check-custom form-check-solid">
+                    <input class="form-check-input" type="checkbox" name="choices[${choiceCount}][is_correct]" value="1" id="choice_${choiceCount}_correct">
+                    <label class="form-check-label" for="choice_${choiceCount}_correct">
+                        Jawaban Benar
+                    </label>
+                </div>
             </div>
         </div>
         `;
@@ -491,11 +411,9 @@ window.previewImage = function(input, previewId) {
         newChoice.querySelector('.remove-choice').addEventListener('click', function() {
             newChoice.remove();
             choiceCount--;
-            updateTotalScore();
         });
 
         choiceCount++;
-        updateTotalScore();
     });
 
     // Form submission with confirmation
@@ -507,27 +425,6 @@ window.previewImage = function(input, previewId) {
 
     formElement.addEventListener('submit', function(e) {
         e.preventDefault();
-
-        // Check total score before submitting
-        let total = 0;
-        const scoreInputs = document.querySelectorAll('.choice-score-input');
-        scoreInputs.forEach(function(input) {
-            const value = parseFloat(input.value) || 0;
-            total += value;
-        });
-
-        if (Math.abs(total - 100) > 0.01) {
-            Swal.fire({
-                text: `Total skor harus tepat 100%. Total saat ini: ${total.toFixed(2)}%`,
-                icon: "error",
-                buttonsStyling: false,
-                confirmButtonText: "Ok, got it!",
-                customClass: {
-                    confirmButton: "btn fw-bold btn-primary",
-                }
-            });
-            return;
-        }
 
         Swal.fire({
             text: "Apakah Anda yakin ingin menyimpan perubahan?",

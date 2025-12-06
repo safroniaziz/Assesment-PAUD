@@ -10,26 +10,15 @@ class Recommendation extends Model
     use HasFactory;
 
     protected $fillable = [
-        'aspect_id',
-        'category',
+        'maturity_category',
         'recommendation_text',
     ];
 
     /**
-     * Get the aspect this recommendation belongs to
+     * Get recommendation for specific maturity category
      */
-    public function aspect()
+    public static function findForMaturityCategory(string $maturityCategory)
     {
-        return $this->belongsTo(AssessmentAspect::class, 'aspect_id');
-    }
-
-    /**
-     * Get recommendation for specific aspect and category
-     */
-    public static function findForCategory(int $aspectId, string $category)
-    {
-        return static::where('aspect_id', $aspectId)
-            ->where('category', $category)
-            ->first();
+        return static::where('maturity_category', $maturityCategory)->first();
     }
 }

@@ -7,37 +7,45 @@ use App\Models\ClassRoom;
 use App\Models\Student;
 use App\Models\AssessmentSession;
 use App\Models\AssessmentResult;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class TeacherController extends Controller
 {
     public function index()
     {
-        $teacher = auth()->user();
-        
+        /** @var User|null $teacher */
+        $teacher = Auth::user();
+
         // Statistik
         $totalClasses = $teacher->classes()->count();
         $totalStudents = Student::whereHas('classRoom', function($q) use ($teacher) {
             $q->where('teacher_id', $teacher->id);
         })->count();
-        
+
         $totalSessions = AssessmentSession::whereHas('student.classRoom', function($q) use ($teacher) {
             $q->where('teacher_id', $teacher->id);
         })->count();
-        
+
         $completedSessions = AssessmentSession::whereHas('student.classRoom', function($q) use ($teacher) {
             $q->where('teacher_id', $teacher->id);
         })->whereNotNull('completed_at')->count();
-        
+
         // Kelas dengan siswa
         $classes = $teacher->classes()->withCount('students')->latest()->take(5)->get();
-        
-        // Sesi asesmen terbaru
+
+        // Sesi asesmen terbaru (hanya sesi yang sudah selesai)
         $recentSessions = AssessmentSession::whereHas('student.classRoom', function($q) use ($teacher) {
-            $q->where('teacher_id', $teacher->id);
-        })->with('student')->latest()->take(10)->get();
-        
+                $q->where('teacher_id', $teacher->id);
+            })
+            ->whereNotNull('completed_at')
+            ->with('student')
+            ->latest()
+            ->take(10)
+            ->get();
+
         // Data untuk grafik - Trend asesmen 6 bulan terakhir
         $monthlyData = [];
         for ($i = 5; $i >= 0; $i--) {
@@ -51,7 +59,7 @@ class TeacherController extends Controller
                   ->count()
             ];
         }
-        
+
         // Data distribusi siswa per kelas
         $classDistribution = $teacher->classes()->withCount('students')->get()->map(function($class) {
             return [
@@ -59,47 +67,69 @@ class TeacherController extends Controller
                 'students' => $class->students_count
             ];
         });
-        
+
         // Data status asesmen
         $pendingSessions = AssessmentSession::whereHas('student.classRoom', function($q) use ($teacher) {
             $q->where('teacher_id', $teacher->id);
         })->whereNull('completed_at')->count();
-        
-        // Data skor tertinggi per siswa
-        $topStudents = AssessmentResult::whereHas('session.student.classRoom', function($q) use ($teacher) {
-            $q->where('teacher_id', $teacher->id);
-        })
-        ->select('session_id', DB::raw('AVG(percentage) as avg_score'))
-        ->groupBy('session_id')
-        ->with('session.student')
-        ->orderBy('avg_score', 'desc')
-        ->take(10)
-        ->get()
-        ->map(function($result) {
-            return [
-                'name' => $result->session->student->name,
-                'score' => round($result->avg_score, 1)
-            ];
-        });
-        
-        // Data skor per kategori (Kognitif, Bahasa, Sosial Emosional)
-        $categoryScores = AssessmentResult::whereHas('session.student.classRoom', function($q) use ($teacher) {
-            $q->where('teacher_id', $teacher->id);
-        })
-        ->join('assessment_aspects', 'assessment_results.aspect_id', '=', 'assessment_aspects.id')
-        ->select('assessment_aspects.name', DB::raw('AVG(assessment_results.percentage) as avg_score'))
-        ->groupBy('assessment_aspects.name')
-        ->get()
-        ->map(function($result) {
-            return [
-                'name' => $result->name,
-                'score' => round($result->avg_score, 1)
-            ];
-        });
-        
+
+        // Semua siswa dengan kategori kematangan
+        $topStudents = AssessmentSession::whereHas('student.classRoom', function($q) use ($teacher) {
+                $q->where('teacher_id', $teacher->id);
+            })
+            ->whereNotNull('completed_at')
+            ->whereNotNull('maturity_category')
+            ->with('student')
+            ->latest('completed_at')
+            ->get()
+            ->map(function($session) {
+                $maturityOrder = [
+                    'matang' => 4,
+                    'cukup_matang' => 3,
+                    'kurang_matang' => 2,
+                    'tidak_matang' => 1,
+                ];
+                $maturityLabels = [
+                    'matang' => 'Matang',
+                    'cukup_matang' => 'Cukup Matang',
+                    'kurang_matang' => 'Kurang Matang',
+                    'tidak_matang' => 'Tidak Matang',
+                ];
+                return [
+                    'name' => $session->student->name,
+                    'maturity_category' => $session->maturity_category,
+                    'maturity_label' => $maturityLabels[$session->maturity_category] ?? '-',
+                    'maturity_value' => $maturityOrder[$session->maturity_category] ?? 0,
+                ];
+            })
+            ->unique('name') // One session per student (latest)
+            ->values();
+
+        // Distribusi kategori kematangan siswa
+        $maturityDistribution = AssessmentSession::whereHas('student.classRoom', function($q) use ($teacher) {
+                $q->where('teacher_id', $teacher->id);
+            })
+            ->whereNotNull('completed_at')
+            ->whereNotNull('maturity_category')
+            ->select('maturity_category', DB::raw('count(*) as count'))
+            ->groupBy('maturity_category')
+            ->get()
+            ->map(function($result) {
+                $labels = [
+                    'matang' => 'Matang',
+                    'cukup_matang' => 'Cukup Matang',
+                    'kurang_matang' => 'Kurang Matang',
+                    'tidak_matang' => 'Tidak Matang',
+                ];
+                return [
+                    'category' => $labels[$result->maturity_category] ?? $result->maturity_category,
+                    'count' => $result->count
+                ];
+            });
+
         return view('teacher.dashboard', compact(
             'totalClasses',
-            'totalStudents', 
+            'totalStudents',
             'totalSessions',
             'completedSessions',
             'classes',
@@ -108,7 +138,7 @@ class TeacherController extends Controller
             'classDistribution',
             'pendingSessions',
             'topStudents',
-            'categoryScores'
+            'maturityDistribution'
         ));
     }
 }

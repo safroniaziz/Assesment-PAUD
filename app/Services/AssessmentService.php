@@ -6,7 +6,7 @@ use App\Models\AssessmentSession;
 use App\Models\AssessmentAnswer;
 use App\Models\AssessmentResult;
 use App\Models\AssessmentAspect;
-use App\Models\ScoringRule;
+use App\Models\AspectThreshold;
 use App\Models\Recommendation;
 use Illuminate\Support\Facades\DB;
 
@@ -28,9 +28,17 @@ class AssessmentService
                 $results[] = $result;
             }
 
-            // Mark session as completed
+            // Calculate overall maturity category based on aspect categories
+            $maturityCategory = $this->calculateMaturityCategory($results);
+            
+            // Get recommendation for the maturity category
+            $recommendation = Recommendation::findForMaturityCategory($maturityCategory);
+
+            // Update session with maturity category and recommendation
             $session->update([
                 'completed_at' => now(),
+                'maturity_category' => $maturityCategory,
+                'recommendation_id' => $recommendation?->id,
             ]);
 
             DB::commit();
@@ -47,38 +55,21 @@ class AssessmentService
      */
     protected function calculateAspectScore(AssessmentSession $session, AssessmentAspect $aspect): AssessmentResult
     {
-        // Get all answers for this aspect with choice scores
+        // Get all answers for this aspect
         $answers = AssessmentAnswer::where('session_id', $session->id)
             ->whereHas('question', function ($query) use ($aspect) {
                 $query->where('aspect_id', $aspect->id);
             })
-            ->with('choice')
             ->get();
 
         $totalQuestions = $answers->count();
+        $correctAnswers = $answers->where('is_correct', true)->count();
+
+        // Get threshold for this aspect
+        $threshold = AspectThreshold::where('aspect_id', $aspect->id)->first();
         
-        // Calculate total score from all answers (sum of choice scores)
-        $totalScore = $answers->sum(function ($answer) {
-            return $answer->choice ? $answer->choice->score : 0;
-        });
-        
-        // Calculate average percentage (total score / number of questions)
-        // Assuming max score per question is 100
-        $percentage = $totalQuestions > 0 ? ($totalScore / $totalQuestions) : 0;
-
-        // Get scoring rule for this age and aspect
-        $scoringRule = ScoringRule::findForAge($aspect->id, $session->total_age_months);
-
-        // Determine category
-        $category = $scoringRule ? $scoringRule->categorizeScore($percentage) : 'medium';
-
-        // Get recommendation
-        $recommendation = Recommendation::findForCategory($aspect->id, $category);
-
-        // Count correct answers (for backward compatibility, score > 0 considered correct)
-        $correctAnswers = $answers->filter(function ($answer) {
-            return $answer->choice && $answer->choice->score > 0;
-        })->count();
+        // Determine aspect category based on threshold
+        $aspectCategory = $threshold ? $threshold->categorize($correctAnswers) : 'kurang';
 
         // Create result record
         return AssessmentResult::create([
@@ -86,10 +77,37 @@ class AssessmentService
             'aspect_id' => $aspect->id,
             'total_questions' => $totalQuestions,
             'correct_answers' => $correctAnswers,
-            'percentage' => round($percentage, 2),
-            'category' => $category,
-            'recommendation_id' => $recommendation?->id,
+            'aspect_category' => $aspectCategory,
         ]);
+    }
+
+    /**
+     * Calculate overall maturity category based on aspect categories
+     */
+    protected function calculateMaturityCategory(array $results): string
+    {
+        $categories = collect($results)->pluck('aspect_category');
+        
+        $baikCount = $categories->filter(fn($cat) => $cat === 'baik')->count();
+        $cukupCount = $categories->filter(fn($cat) => $cat === 'cukup')->count();
+        $kurangCount = $categories->filter(fn($cat) => $cat === 'kurang')->count();
+
+        // Logic based on requirements:
+        // - Semua baik = Matang
+        // - 1-2 aspek cukup = Cukup Matang
+        // - 3-4 aspek cukup/kurang = Kurang Matang
+        // - Semua kurang = Tidak Matang
+
+        if ($baikCount === 4) {
+            return 'matang';
+        } elseif ($kurangCount === 4) {
+            return 'tidak_matang';
+        } elseif ($cukupCount >= 3 || $kurangCount >= 3) {
+            return 'kurang_matang';
+        } else {
+            // 1-2 cukup
+            return 'cukup_matang';
+        }
     }
 
     /**
@@ -100,15 +118,19 @@ class AssessmentService
         int $questionId,
         int $choiceId
     ): AssessmentAnswer {
-        $choice = \App\Models\QuestionChoice::findOrFail($choiceId);
-
-        return AssessmentAnswer::create([
-            'session_id' => $session->id,
-            'question_id' => $questionId,
-            'choice_id' => $choiceId,
-            'is_correct' => $choice->score > 0, // Consider correct if score > 0
-            'answered_at' => now(),
-        ]);
+        // Use updateOrCreate to prevent duplicate answers for the same question
+        return AssessmentAnswer::updateOrCreate(
+            [
+                'session_id' => $session->id,
+                'question_id' => $questionId,
+            ],
+            [
+                'choice_id' => $choiceId,
+                // Simpan hanya boolean benar/salah; skor numerik tidak dipakai lagi
+                'is_correct' => \App\Models\QuestionChoice::whereKey($choiceId)->value('is_correct') ?? false,
+                'answered_at' => now(),
+            ]
+        );
     }
 
     /**

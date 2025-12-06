@@ -66,7 +66,8 @@ class AssessmentAnswerSeeder extends Seeder
                     'session_id' => $session->id,
                     'question_id' => $question->id,
                     'choice_id' => $selectedChoice->id,
-                    'is_correct' => $selectedChoice->score > 0,
+                    // Gunakan boolean is_correct langsung, bukan skor
+                    'is_correct' => $selectedChoice->is_correct ?? false,
                     'answered_at' => Carbon::now()->subDays(rand(0, 29)),
                 ]);
             }

@@ -1,0 +1,257 @@
+@extends('layouts.game')
+
+@section('title', 'Pilih Nama Kamu')
+
+@section('styles')
+<style>
+    @keyframes float {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-8px); }
+    }
+
+    .float-animation {
+        animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes pulse-ring {
+        0% {
+            transform: scale(0.8);
+            opacity: 1;
+        }
+        100% {
+            transform: scale(1.2);
+            opacity: 0;
+        }
+    }
+    
+    @keyframes bounce-in {
+        0% {
+            transform: scale(0);
+            opacity: 0;
+        }
+        50% {
+            transform: scale(1.1);
+        }
+        100% {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+    
+    .student-card {
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        animation: bounce-in 0.5s ease-out;
+    }
+    
+    .student-card:nth-child(1) { animation-delay: 0.1s; }
+    .student-card:nth-child(2) { animation-delay: 0.2s; }
+    .student-card:nth-child(3) { animation-delay: 0.3s; }
+    .student-card:nth-child(4) { animation-delay: 0.4s; }
+    .student-card:nth-child(5) { animation-delay: 0.5s; }
+    .student-card:nth-child(6) { animation-delay: 0.6s; }
+    .student-card:nth-child(n+7) { animation-delay: 0.7s; }
+
+    .student-card:hover {
+        transform: translateY(-10px) scale(1.08);
+        box-shadow: 0 30px 60px -12px rgba(139, 92, 246, 0.6);
+    }
+    
+    .student-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+            90deg,
+            transparent,
+            rgba(255, 255, 255, 0.4),
+            transparent
+        );
+        transition: left 0.7s;
+    }
+    
+    .student-card:hover::before {
+        left: 100%;
+    }
+    
+    .avatar-container {
+        position: relative;
+        display: inline-block;
+    }
+    
+    .avatar-container::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        border: 3px solid rgba(139, 92, 246, 0.5);
+        opacity: 0;
+        animation: pulse-ring 2s infinite;
+    }
+    
+    .student-card:hover .avatar-container::after {
+        opacity: 1;
+    }
+</style>
+@endsection
+
+@section('content')
+<div class="game-container min-h-screen flex items-center justify-center p-4 md:p-6 relative overflow-hidden">
+    <!-- Background Elements -->
+    <div class="absolute inset-0 overflow-hidden pointer-events-none">
+        <div class="absolute top-20 left-10 w-48 h-48 bg-yellow-300/15 rounded-full blur-3xl float-animation"></div>
+        <div class="absolute top-40 right-20 w-36 h-36 bg-pink-300/15 rounded-full blur-3xl float-animation" style="animation-delay: 1s;"></div>
+        <div class="absolute bottom-20 left-1/4 w-40 h-40 bg-blue-300/15 rounded-full blur-3xl float-animation" style="animation-delay: 2s;"></div>
+    </div>
+
+    <div class="max-w-6xl w-full relative z-10 flex flex-col items-center justify-center min-h-[80vh]">
+        <!-- Back Button - Top Left -->
+        <div class="absolute top-0 left-0 fade-in">
+            <a href="{{ route('game.select-class') }}"
+               class="inline-flex items-center gap-2 bg-white/20 backdrop-blur-lg text-white px-4 py-2 rounded-xl text-sm md:text-base font-semibold hover:bg-white/30 transition-all shadow-lg border border-white/30">
+                <i class="fas fa-arrow-left"></i>
+                <span>Kembali</span>
+            </a>
+        </div>
+
+        <!-- Centered Content -->
+        <div class="text-center w-full flex flex-col items-center justify-center">
+            <!-- Compact Header -->
+            <div class="mb-6 md:mb-8 fade-in">
+                <div class="inline-block">
+                    <div class="bg-white/20 backdrop-blur-lg rounded-xl px-5 md:px-6 py-3 md:py-4 border border-white/30 shadow-lg">
+                        <h1 class="text-2xl md:text-3xl font-extrabold text-white drop-shadow-lg flex items-center justify-center gap-2 mb-1">
+                            <span class="text-2xl md:text-3xl float-animation">👋</span>
+                            <span>Pilih Nama Siswa</span>
+                        </h1>
+                        <p class="text-sm md:text-base text-white/90 font-semibold">
+                            Kelas <span class="text-yellow-300">{{ $class->name }}</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Compact Search Bar -->
+            <div class="mb-5 md:mb-6 fade-in w-full max-w-md">
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <i class="fas fa-search text-gray-400"></i>
+                    </div>
+                    <input type="text"
+                           id="searchStudent"
+                           placeholder="Cari nama..."
+                           class="w-full pl-11 pr-4 py-3 bg-white/95 backdrop-blur-md rounded-xl border-2 border-gray-200 focus:border-purple-400 focus:outline-none text-sm md:text-base font-semibold text-gray-800 shadow-lg">
+                </div>
+            </div>
+
+            <!-- Compact Student Grid -->
+            <div id="studentsContainer" class="fade-in w-full flex items-center justify-center">
+                <div class="flex flex-wrap items-center justify-center gap-3 md:gap-4 w-full max-w-5xl">
+                    @forelse($class->students as $index => $student)
+                        <a href="{{ route('game.enter-age', $student->id) }}"
+                           class="student-card group relative bg-gradient-to-br from-white to-gray-50 rounded-2xl p-5 md:p-6 text-center shadow-xl border-2 border-gray-200 hover:border-purple-400 overflow-hidden transition-all duration-300 w-[150px] md:w-[170px]"
+                           data-name="{{ strtolower($student->name) }}"
+                           style="animation-fill-mode: both;">
+                            <!-- Decorative Background with Multiple Layers -->
+                            <div class="absolute top-0 right-0 w-28 h-28 bg-gradient-to-br from-purple-300/40 to-pink-300/40 rounded-full blur-2xl -mr-14 -mt-14 group-hover:scale-150 group-hover:opacity-70 transition-all duration-700"></div>
+                            <div class="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-blue-300/30 to-cyan-300/30 rounded-full blur-xl -ml-12 -mb-12 group-hover:scale-125 group-hover:opacity-60 transition-all duration-700"></div>
+                            <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-32 h-32 bg-gradient-to-r from-indigo-200/20 to-purple-200/20 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+
+                            <!-- Corner Accents -->
+                            <div class="absolute top-2 right-2 w-3 h-3 bg-purple-400 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                            <div class="absolute bottom-2 left-2 w-3 h-3 bg-pink-400 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+
+                            <!-- Content -->
+                            <div class="relative z-10">
+                                <!-- Avatar with Enhanced Glow -->
+                                <div class="mb-4 transform group-hover:scale-115 group-hover:rotate-12 transition-all duration-500">
+                                    <div class="avatar-container">
+                                        <div class="inline-block bg-gradient-to-br {{ $student->gender === 'male' ? 'from-blue-400 via-blue-500 to-blue-600' : 'from-pink-400 via-pink-500 to-pink-600' }} rounded-full p-4 shadow-2xl group-hover:shadow-purple-500/60 transition-all duration-500 relative">
+                                            <!-- Inner Glow -->
+                                            <div class="absolute inset-0 rounded-full bg-gradient-to-br from-white/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                                            <div class="text-4xl md:text-5xl relative z-10 transform group-hover:scale-110 transition-transform duration-300">
+                                                {{ $student->gender === 'male' ? '👦' : '👧' }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Student Name with Enhanced Gradient -->
+                                <h3 class="text-sm md:text-base font-extrabold text-gray-900 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-purple-600 group-hover:via-indigo-600 group-hover:to-pink-600 transition-all duration-300 line-clamp-2 min-h-[2.5rem] mb-3 drop-shadow-sm">
+                                    {{ $student->name }}
+                                </h3>
+
+                                <!-- Enhanced Number Badge -->
+                                <div class="inline-flex items-center justify-center w-8 h-8 md:w-9 md:h-9 bg-gradient-to-br from-purple-500 via-indigo-500 to-pink-500 rounded-full text-white text-xs md:text-sm font-bold shadow-xl group-hover:scale-125 group-hover:rotate-12 transition-all duration-300 relative overflow-hidden">
+                                    <!-- Badge Shine -->
+                                    <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+                                    <span class="relative z-10">{{ $index + 1 }}</span>
+                                </div>
+                            </div>
+
+                            <!-- Enhanced Hover Overlay -->
+                            <div class="absolute inset-0 bg-gradient-to-br from-purple-500/0 via-indigo-500/0 to-pink-500/0 group-hover:from-purple-500/10 group-hover:via-indigo-500/10 group-hover:to-pink-500/10 transition-all duration-300 rounded-2xl pointer-events-none"></div>
+                            
+                            <!-- Shimmer Effect -->
+                            <div class="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
+                                <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+                            </div>
+                            
+                            <!-- Border Glow Effect -->
+                            <div class="absolute inset-0 rounded-2xl border-2 border-transparent group-hover:border-purple-300/50 transition-all duration-300 pointer-events-none"></div>
+                        </a>
+                    @empty
+                        <div class="col-span-full bg-white/90 backdrop-blur-sm rounded-xl p-8 md:p-12 text-center shadow-lg border-2 border-gray-200">
+                            <div class="text-5xl mb-4 float-animation">😕</div>
+                            <h3 class="text-xl md:text-2xl font-bold text-gray-800 mb-2">Belum Ada Siswa</h3>
+                            <p class="text-sm md:text-base text-gray-600">Belum ada siswa di kelas ini</p>
+                        </div>
+                    @endforelse
+                </div>
+
+                <!-- Empty Search Result -->
+                <div id="noResults" class="hidden w-full bg-white/90 backdrop-blur-sm rounded-xl p-8 md:p-12 text-center shadow-lg border-2 border-gray-200 mt-4">
+                    <div class="text-5xl mb-4 float-animation">🔍</div>
+                    <h3 class="text-xl md:text-2xl font-bold text-gray-800 mb-2">Tidak Ditemukan</h3>
+                    <p class="text-sm md:text-base text-gray-600">Coba cari dengan nama lain</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@push('scripts')
+<script>
+$(document).ready(function() {
+    $('#searchStudent').on('input', function() {
+        const searchValue = $(this).val().toLowerCase();
+        const students = $('.student-card');
+        const noResults = $('#noResults');
+        let visibleCount = 0;
+
+        students.each(function() {
+            const studentName = $(this).data('name');
+            if (studentName.includes(searchValue)) {
+                $(this).show();
+                visibleCount++;
+            } else {
+                $(this).hide();
+            }
+        });
+
+        if (visibleCount === 0 && searchValue.length > 0) {
+            noResults.removeClass('hidden').addClass('grid');
+        } else {
+            noResults.addClass('hidden').removeClass('grid');
+        }
+    });
+});
+</script>
+@endpush
+@endsection

@@ -14,13 +14,7 @@ class AssessmentResult extends Model
         'aspect_id',
         'total_questions',
         'correct_answers',
-        'percentage',
-        'category',
-        'recommendation_id',
-    ];
-
-    protected $casts = [
-        'percentage' => 'decimal:2',
+        'aspect_category',
     ];
 
     /**
@@ -37,13 +31,5 @@ class AssessmentResult extends Model
     public function aspect()
     {
         return $this->belongsTo(AssessmentAspect::class, 'aspect_id');
-    }
-
-    /**
-     * Get the recommendation for this result
-     */
-    public function recommendation()
-    {
-        return $this->belongsTo(Recommendation::class, 'recommendation_id');
     }
 }

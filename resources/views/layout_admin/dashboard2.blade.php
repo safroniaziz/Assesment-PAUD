@@ -275,59 +275,59 @@
 										@if(Auth::user()->isPsychologist())
 											@include('layouts.psychologist._menu')
 										@else
-											<!--begin:Menu item-->
-											<!-- Dashboard Menu Item -->
-											<div data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-placement="bottom-start"
-												class="menu-item {{ Route::is('auditee.dashboard') || Route::is('auditee.dashboar*')
-												 || Route::is('auditee.dashboard.*')
-												? 'show' : ''
-												}}"
-												 >
-												<!--begin:Menu link-->
-												<a href="{{ route('auditee.dashboard') }}" class="menu-link py-3">
-													<span class="menu-title">
-														<span class="menu-text">Dashboard</span>
-														<span class="menu-desc">Kelengkapan Data</span>
-													</span>
-													<span class="menu-arrow d-lg-none"></span>
-												</a>
-												<!--end:Menu link-->
-											</div>
-											<!--end:Menu item-->
+									<!--begin:Menu item-->
+                                    <!-- Dashboard Menu Item -->
+                                    <div data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-placement="bottom-start"
+                                        class="menu-item {{ Route::is('auditee.dashboard') || Route::is('auditee.dashboar*')
+                                         || Route::is('auditee.dashboard.*')
+                                        ? 'show' : ''
+                                        }}"
+                                         >
+                                        <!--begin:Menu link-->
+                                        <a href="{{ route('auditee.dashboard') }}" class="menu-link py-3">
+                                            <span class="menu-title">
+                                                <span class="menu-text">Dashboard</span>
+                                                <span class="menu-desc">Kelengkapan Data</span>
+                                            </span>
+                                            <span class="menu-arrow d-lg-none"></span>
+                                        </a>
+                                        <!--end:Menu link-->
+                                    </div>
+                                    <!--end:Menu item-->
 
-											<!-- Kelas Menu Item -->
-											<div data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-placement="bottom-start"
-												class="menu-item
-												{{ Route::is('auditee.pengajuanAmi') || Route::is('auditee.pengajuanAmi.*') ? 'show' : '' }}
-												 ">
-												<!--begin:Menu link-->
-												<a href="{{ route('auditee.pengajuanAmi') }}" class="menu-link py-3">
-													<span class="menu-title">
-														<span class="menu-text">Pengajuan AMI</span>
-														<span class="menu-desc">Kelengkapan Profil & Unggah Siklus</span>
-													</span>
-													<span class="menu-arrow d-lg-none"></span>
-												</a>
-												<!--end:Menu link-->
-											</div>
-											<!--end:Menu item-->
+                                    <!-- Kelas Menu Item -->
+                                    <div data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-placement="bottom-start"
+                                        class="menu-item
+                                        {{ Route::is('auditee.pengajuanAmi') || Route::is('auditee.pengajuanAmi.*') ? 'show' : '' }}
+                                         ">
+                                        <!--begin:Menu link-->
+                                        <a href="{{ route('auditee.pengajuanAmi') }}" class="menu-link py-3">
+                                            <span class="menu-title">
+                                                <span class="menu-text">Pengajuan AMI</span>
+                                                <span class="menu-desc">Kelengkapan Profil & Unggah Siklus</span>
+                                            </span>
+                                            <span class="menu-arrow d-lg-none"></span>
+                                        </a>
+                                        <!--end:Menu link-->
+                                    </div>
+                                    <!--end:Menu item-->
 
-											<!-- Kelas Menu Item -->
-											<div data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-placement="bottom-start"
-												class="menu-item
-												{{ Route::is('auditee.laporan.index') || Route::is('auditee.laporan.index.*') ? 'show' : '' }}
-												 ">
-												<!--begin:Menu link-->
-												<a href="{{ route('auditee.laporan.index') }}" class="menu-link py-3">
-													<span class="menu-title">
-														<span class="menu-text">Laporan AMI</span>
-														<span class="menu-desc">Lihat & Download Hasil Audit</span>
-													</span>
-													<span class="menu-arrow d-lg-none"></span>
-												</a>
-												<!--end:Menu link-->
-											</div>
-											<!--end:Menu item-->
+                                    <!-- Kelas Menu Item -->
+                                    <div data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-placement="bottom-start"
+                                        class="menu-item
+                                        {{ Route::is('auditee.laporan.index') || Route::is('auditee.laporan.index.*') ? 'show' : '' }}
+                                         ">
+                                        <!--begin:Menu link-->
+                                        <a href="{{ route('auditee.laporan.index') }}" class="menu-link py-3">
+                                            <span class="menu-title">
+                                                <span class="menu-text">Laporan AMI</span>
+                                                <span class="menu-desc">Lihat & Download Hasil Audit</span>
+                                            </span>
+                                            <span class="menu-arrow d-lg-none"></span>
+                                        </a>
+                                        <!--end:Menu link-->
+                                    </div>
+                                    <!--end:Menu item-->
 										@endif
 									@endauth
 								</div>

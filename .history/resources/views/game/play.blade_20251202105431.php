@@ -1,0 +1,273 @@
+@extends('layouts.game')
+
+@section('title', 'Asesmen')
+
+@section('content')
+<div class="game-container h-screen flex flex-col p-3 md:p-4 relative overflow-hidden">
+    <!-- Elegant Header with Progress -->
+    <div class="flex-shrink-0 mb-3 relative z-10">
+        <div class="bg-white/95 backdrop-blur-lg rounded-xl p-3 md:p-4 shadow-lg border border-gray-200">
+            <div class="flex items-center justify-between gap-3">
+                <div class="flex items-center gap-3">
+                    <div class="bg-gradient-to-br from-purple-500 via-indigo-500 to-pink-500 rounded-xl w-10 h-10 md:w-12 md:h-12 flex items-center justify-center text-white text-base md:text-lg font-bold shadow-md">
+                        {{ $progress + 1 }}
+                    </div>
+                    <div>
+                        <p class="text-xs md:text-sm text-gray-600 font-semibold">Soal</p>
+                        <p class="text-sm md:text-base text-gray-800 font-bold">{{ $progress + 1 }} / {{ $totalQuestions }}</p>
+                    </div>
+                </div>
+                <div class="flex-1 mx-2 md:mx-4">
+                    <div class="bg-gray-100 rounded-full h-2.5 md:h-3 overflow-hidden shadow-inner">
+                        <div class="bg-gradient-to-r from-purple-500 via-indigo-500 to-pink-500 h-full rounded-full transition-all duration-700 ease-out shadow-sm" 
+                             style="width: {{ (($progress + 1) / $totalQuestions) * 100 }}%"></div>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <p class="text-xs md:text-sm text-gray-600 font-semibold">Progress</p>
+                    <p class="text-sm md:text-base font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600">
+                        {{ round((($progress + 1) / $totalQuestions) * 100) }}%
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Area - Grid Layout -->
+    <div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 overflow-hidden relative z-10">
+        <!-- Left: Question Image -->
+        <div class="flex items-center justify-center">
+            <div class="bg-white rounded-xl p-4 md:p-5 shadow-xl w-full h-full flex flex-col border-2 border-gray-200 relative overflow-hidden">
+                <!-- Decorative Corner -->
+                <div class="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-purple-200/30 to-pink-200/30 rounded-full blur-2xl -mr-10 -mt-10"></div>
+                
+                <div class="text-center mb-3 flex-shrink-0 relative z-10">
+                    <div class="inline-flex items-center gap-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-2 rounded-full text-xs md:text-sm font-bold shadow-md">
+                        <i class="fas fa-star"></i>
+                        <span>Pilih jawaban yang benar!</span>
+                    </div>
+                </div>
+                <div class="flex-1 flex items-center justify-center bg-gradient-to-br from-purple-50 via-indigo-50 to-pink-50 rounded-lg p-3 md:p-4 border border-purple-100 overflow-hidden relative z-10">
+                    <img src="{{ asset('storage/' . $currentQuestion->question_image_path) }}" 
+                         alt="Soal" 
+                         onerror="this.src='https://via.placeholder.com/400x300?text=Gambar+Tidak+Ditemukan'; this.onerror=null;"
+                         class="w-full h-full object-contain rounded-md shadow-sm">
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Choices -->
+        <div class="flex flex-col">
+            <div class="bg-white/95 backdrop-blur-lg rounded-xl p-3 md:p-4 shadow-lg mb-3 flex-shrink-0 border border-gray-200">
+                <h3 class="text-center text-sm md:text-base font-bold text-gray-800 flex items-center justify-center gap-2">
+                    <i class="fas fa-hand-pointer text-purple-600"></i>
+                    <span>Pilih Jawaban</span>
+                </h3>
+            </div>
+            <div class="grid grid-cols-2 gap-3 md:gap-4 flex-1" id="choices-container">
+                @foreach($currentQuestion->choices as $index => $choice)
+                    <button type="button" 
+                            class="choice-button group bg-white rounded-xl p-3 md:p-4 shadow-lg cursor-pointer border-2 border-gray-200 hover:border-purple-400 transform hover:scale-105 transition-all duration-300 relative overflow-hidden flex flex-col"
+                            data-choice-id="{{ $choice->id }}">
+                        <!-- Hover Overlay -->
+                        <div class="absolute inset-0 bg-gradient-to-br from-purple-500/0 to-pink-500/0 group-hover:from-purple-500/5 group-hover:to-pink-500/5 transition-all duration-300 rounded-xl"></div>
+                        
+                        <!-- Selection Indicator -->
+                        <div class="absolute top-2 right-2 w-6 h-6 md:w-7 md:h-7 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-all duration-300 z-10 shadow-lg">
+                            <i class="fas fa-check text-xs"></i>
+                        </div>
+                        
+                        <!-- Choice Image -->
+                        <div class="flex-1 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 rounded-lg p-2 md:p-3 mb-2 border border-gray-100 flex items-center justify-center overflow-hidden group-hover:shadow-md transition-shadow duration-300">
+                            <img src="{{ asset('storage/' . $choice->choice_image_path) }}" 
+                                 alt="Pilihan {{ $index + 1 }}" 
+                                 onerror="this.src='https://via.placeholder.com/200x150?text=Pilihan+{{ $index + 1 }}'; this.onerror=null;"
+                                 class="w-full h-full object-contain rounded-md">
+                        </div>
+                        
+                        <!-- Choice Number Badge -->
+                        <div class="text-center flex-shrink-0">
+                            <div class="inline-flex items-center justify-center bg-gradient-to-br from-purple-500 via-indigo-500 to-pink-500 text-white rounded-full w-7 h-7 md:w-8 md:h-8 font-bold text-xs md:text-sm shadow-md group-hover:scale-110 transition-transform duration-300">
+                                {{ $index + 1 }}
+                            </div>
+                        </div>
+                    </button>
+                @endforeach
+            </div>
+        </div>
+    </div>
+
+    <!-- Next Button - Fixed at Bottom -->
+    <div class="flex-shrink-0 text-center relative z-10 mt-3">
+        <button id="next-btn" 
+                disabled
+                class="bg-gradient-to-r from-green-400 via-green-500 to-emerald-600 text-white px-8 md:px-12 py-3 md:py-4 rounded-full text-base md:text-lg font-bold shadow-xl disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 active:scale-95 transition-all duration-300 transform relative overflow-hidden group w-full max-w-sm">
+            <span class="relative z-10 flex items-center justify-center gap-2">
+                <span>Lanjutkan</span>
+                <i class="fas fa-arrow-right group-hover:translate-x-1 transition-transform duration-300"></i>
+            </span>
+            <div class="absolute inset-0 bg-white/20 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-300"></div>
+        </button>
+    </div>
+</div>
+
+<!-- Hidden form data -->
+<input type="hidden" id="question-id" value="{{ $currentQuestion->id }}">
+<input type="hidden" id="selected-choice" value="">
+
+<style>
+.game-container {
+    height: 100vh;
+    max-height: 100vh;
+    overflow: hidden;
+}
+
+.choice-button.selected {
+    border-color: #10b981 !important;
+    background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+    box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
+    transform: scale(1.05);
+}
+
+.choice-button.selected .fa-check {
+    opacity: 1 !important;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+}
+
+.choice-button.selected > div:first-child {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.choice-button.selected > div:nth-child(3) {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+}
+
+.choice-button img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    display: block;
+    transition: transform 0.3s ease;
+}
+
+.choice-button:hover img {
+    transform: scale(1.05);
+}
+
+/* Ensure no scrolling */
+body {
+    overflow: hidden;
+}
+
+/* Smooth transitions */
+* {
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .game-container {
+        padding: 0.75rem;
+    }
+    
+    #choices-container {
+        gap: 0.75rem;
+    }
+}
+</style>
+@endsection
+
+@section('scripts')
+<script>
+$(document).ready(function() {
+    let selectedChoiceId = null;
+
+    // Choice selection with sound effect (optional)
+    $('.choice-button').click(function() {
+        // Remove previous selection
+        $('.choice-button').removeClass('selected');
+        
+        // Add selection to clicked choice
+        $(this).addClass('selected');
+        
+        // Store selected choice
+        selectedChoiceId = $(this).data('choice-id');
+        $('#selected-choice').val(selectedChoiceId);
+        
+        // Enable next button with animation
+        $('#next-btn').prop('disabled', false).addClass('animate-pulse');
+        setTimeout(() => {
+            $('#next-btn').removeClass('animate-pulse');
+        }, 1000);
+    });
+
+    // Next button click
+    $('#next-btn').click(function() {
+        if (!selectedChoiceId) {
+            // Show friendly message with animation
+            const btn = $(this);
+            btn.addClass('animate-bounce');
+            setTimeout(() => {
+                btn.removeClass('animate-bounce');
+            }, 1000);
+            return;
+        }
+
+        // Disable button to prevent double click
+        const $btn = $(this);
+        $btn.prop('disabled', true);
+        $('.choice-button').prop('disabled', true);
+
+        // Show loading state
+        const btnText = $btn.find('span').html();
+        $btn.find('span').html('<i class="fas fa-spinner fa-spin mr-2"></i>Menyimpan...');
+
+        // Submit answer via AJAX
+        $.ajax({
+            url: '{{ route('game.submit-answer') }}',
+            method: 'POST',
+            data: {
+                _token: '{{ csrf_token() }}',
+                question_id: $('#question-id').val(),
+                choice_id: selectedChoiceId
+            },
+            success: function(response) {
+                // Show success feedback
+                $btn.find('span').html('<i class="fas fa-check mr-2"></i>Bagus!');
+                $btn.removeClass('from-green-400 via-green-500 to-emerald-600');
+                $btn.addClass('from-green-500 to-emerald-700');
+                
+                // Redirect to next question after short delay
+                setTimeout(() => {
+                    window.location.href = '{{ route('game.play') }}';
+                }, 800);
+            },
+            error: function(xhr) {
+                // Restore button
+                $btn.prop('disabled', false);
+                $('.choice-button').prop('disabled', false);
+                $btn.find('span').html(btnText);
+                $btn.removeClass('from-green-500 to-emerald-700');
+                $btn.addClass('from-green-400 via-green-500 to-emerald-600');
+                
+                alert('Terjadi kesalahan. Silakan coba lagi.');
+            }
+        });
+    });
+
+    // Add keyboard support
+    $(document).keydown(function(e) {
+        if (e.key >= '1' && e.key <= '4') {
+            const index = parseInt(e.key) - 1;
+            const button = $('.choice-button').eq(index);
+            if (button.length) {
+                button.click();
+            }
+        }
+        if (e.key === 'Enter' && !$('#next-btn').prop('disabled')) {
+            $('#next-btn').click();
+        }
+    });
+});
+</script>
+@endsection
