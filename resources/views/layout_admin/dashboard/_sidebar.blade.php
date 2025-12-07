@@ -15,7 +15,7 @@
                 min-width: 50px;
                 min-height: 50px;
             " onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-                <i class="fas fa-home fs-2x text-white"></i>
+                <img src="{{ asset('images/logo.png') }}" alt="Logo PAUD" style="width: 35px; height: 35px; object-fit: contain;">
             </div>
             <div class="h-35px app-sidebar-logo-minimize d-none" style="
                 background: linear-gradient(145deg, #667eea, #764ba2);
@@ -27,11 +27,11 @@
                 min-width: 35px;
                 min-height: 35px;
             ">
-                <i class="fas fa-home fs-3 text-white"></i>
+                <img src="{{ asset('images/logo.png') }}" alt="Logo PAUD" style="width: 25px; height: 25px; object-fit: contain;">
             </div>
             <div class="d-flex flex-column ms-3 app-sidebar-logo-default">
-                <span class="fs-3 fw-bolder text-uppercase" style="letter-spacing: 1px; font-family: 'Segoe UI', sans-serif; color: #ffffff; text-shadow: 0 0 10px rgba(255,255,255,0.3);">KOSABANGSA</span>
-                <span class="fs-8 fw-light" style="margin-top: -4px; letter-spacing: 0.5px; color: rgba(255,255,255,0.9); text-shadow: 0 0 5px rgba(255,255,255,0.2);">Desa Kaana</span>
+                <span class="fs-3 fw-bolder text-uppercase" style="letter-spacing: 1px; font-family: 'Segoe UI', sans-serif; color: #ffffff; text-shadow: 0 0 10px rgba(255,255,255,0.3);">ASESMEN PAUD</span>
+                <span class="fs-8 fw-light" style="margin-top: -4px; letter-spacing: 0.5px; color: rgba(255,255,255,0.9); text-shadow: 0 0 5px rgba(255,255,255,0.2);">Penilaian Perkembangan Anak</span>
             </div>
         </a>
 
@@ -92,18 +92,7 @@
                             </div>
                             <!--end:Menu item-->
 
-                            <!--begin:Menu item-->
-                            <div class="menu-item {{ Route::is('psychologist.scoring-rules.*') ? 'show' : '' }}">
-                                <!--begin:Menu link-->
-                                <a class="menu-link {{ Route::is('psychologist.scoring-rules.*') ? 'active' : '' }}" href="{{ route('psychologist.scoring-rules.index') }}">
-                                    <span class="menu-icon">
-                                        <i class="fas fa-calculator fs-4"></i>
-                                    </span>
-                                    <span class="menu-title">Aturan Penilaian</span>
-                                </a>
-                                <!--end:Menu link-->
-                            </div>
-                            <!--end:Menu item-->
+                            {{-- Aturan Penilaian menu removed - not relevant --}}
 
                             <!--begin:Menu item-->
                             <div class="menu-item {{ Route::is('psychologist.recommendations.*') ? 'show' : '' }}">
@@ -152,6 +141,42 @@
                                         <i class="fas fa-user-graduate fs-4"></i>
                                     </span>
                                     <span class="menu-title">Data Siswa</span>
+                                </a>
+                                <!--end:Menu link-->
+                            </div>
+                            <!--end:Menu item-->
+
+                            <!--begin:Menu item (Landing Page)-->
+                            <div class="menu-item">
+                                <!--begin:Menu content-->
+                                <div class="menu-content pt-6 pb-2">
+                                    <span class="menu-section text-muted text-uppercase fs-8 ls-1">Landing Page</span>
+                                </div>
+                                <!--end:Menu content-->
+                            </div>
+                            <!--end:Menu item-->
+
+                            <!--begin:Menu item-->
+                            <div class="menu-item {{ Route::is('psychologist.team-members.*') ? 'show' : '' }}">
+                                <!--begin:Menu link-->
+                                <a class="menu-link {{ Route::is('psychologist.team-members.*') ? 'active' : '' }}" href="{{ route('psychologist.team-members.index') }}">
+                                    <span class="menu-icon">
+                                        <i class="fas fa-users fs-4"></i>
+                                    </span>
+                                    <span class="menu-title">Team Members</span>
+                                </a>
+                                <!--end:Menu link-->
+                            </div>
+                            <!--end:Menu item-->
+
+                            <!--begin:Menu item-->
+                            <div class="menu-item {{ Route::is('psychologist.landing-settings.*') ? 'show' : '' }}">
+                                <!--begin:Menu link-->
+                                <a class="menu-link {{ Route::is('psychologist.landing-settings.*') ? 'active' : '' }}" href="{{ route('psychologist.landing-settings.index') }}">
+                                    <span class="menu-icon">
+                                        <i class="fas fa-cog fs-4"></i>
+                                    </span>
+                                    <span class="menu-title">Page Settings</span>
                                 </a>
                                 <!--end:Menu link-->
                             </div>

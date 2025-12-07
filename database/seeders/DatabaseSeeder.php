@@ -21,12 +21,14 @@ class DatabaseSeeder extends Seeder
             AspectRecommendationSeeder::class, // New detailed recommendations per aspect
             PsychologistUserSeeder::class,
             TeacherUserSeeder::class,
+            TeamMemberSeeder::class, // Team collaboration members
             ClassRoomSeeder::class,
             StudentSeeder::class,
             ScoringRuleSeeder::class,
             RecommendationSeeder::class, // Old session-level recommendations (can be removed later)
             QuestionSeeder::class,
             AssessmentSessionSeeder::class, // Sample assessment data for testing
+            LandingSettingSeeder::class, // New seeder for landing page content
         ]);
     }
 }

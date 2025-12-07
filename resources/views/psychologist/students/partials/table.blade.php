@@ -60,10 +60,10 @@
                     @endif
                 </td>
                 <td>
-                    <span class="text-gray-600">{{ $student->birth_date->format('d/m/Y') }}</span>
+                    <span class="text-gray-600">{{ $student->birth_date ? $student->birth_date->format('d/m/Y') : '-' }}</span>
                 </td>
                 <td>
-                    <span class="text-gray-800 fw-bold">{{ $student->birth_date->age }} tahun</span>
+                    <span class="text-gray-800 fw-bold">{{ $student->birth_date ? $student->birth_date->age . ' tahun' : '-' }}</span>
                 </td>
                 <td>
                     <span class="badge badge-light-info fs-7 fw-bold px-3 py-2">

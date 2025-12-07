@@ -13,9 +13,10 @@ use App\Http\Controllers\Teacher\ClassRoomController;
 use App\Http\Controllers\Teacher\StudentController;
 use App\Http\Controllers\Teacher\ResultController;
 use App\Http\Controllers\Game\GameController;
+use App\Http\Controllers\LandingController;
 use Illuminate\Support\Facades\Route;
 
-// Root route - redirect based on role
+// Root route - show landing page or redirect based on role
 Route::get('/', function () {
     if (auth()->check()) {
         if (auth()->user()->isPsychologist()) {
@@ -24,7 +25,7 @@ Route::get('/', function () {
             return redirect()->route('teacher.dashboard');
         }
     }
-    return redirect()->route('login');
+    return app(LandingController::class)->index();
 });
 
 // Game routes (no auth required - uses session)
@@ -55,6 +56,11 @@ Route::middleware(['auth', 'psychologist'])->prefix('psychologist')->name('psych
     Route::resource('teachers', PsychologistTeacherController::class);
     Route::resource('classrooms', PsychologistClassRoomController::class);
     Route::resource('students', PsychologistStudentController::class);
+
+    // Landing page management
+    Route::resource('team-members', \App\Http\Controllers\Psychologist\TeamMemberController::class);
+    Route::get('landing-settings', [\App\Http\Controllers\Psychologist\LandingSettingController::class, 'index'])->name('landing-settings.index');
+    Route::put('landing-settings', [\App\Http\Controllers\Psychologist\LandingSettingController::class, 'update'])->name('landing-settings.update');
 });
 
 // Teacher routes
