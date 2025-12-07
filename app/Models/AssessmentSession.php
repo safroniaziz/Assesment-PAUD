@@ -13,6 +13,8 @@ class AssessmentSession extends Model
         'student_id',
         'age_years',
         'age_months',
+        'total_age_months',
+        'started_at',
         'completed_at',
         'abandoned_at',
         'maturity_category',

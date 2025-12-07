@@ -30,81 +30,81 @@ class StudentSeeder extends Seeder
             [
                 'name' => 'Ahmad Fauzi',
                 'gender' => 'male',
-                'birth_date' => Carbon::now()->subYears(4)->subMonths(6),
+                'birth_date' => null,
             ],
             [
                 'name' => 'Siti Nurhaliza',
                 'gender' => 'female',
-                'birth_date' => Carbon::now()->subYears(4)->subMonths(3),
+                'birth_date' => null,
             ],
             [
                 'name' => 'Budi Santoso',
                 'gender' => 'male',
-                'birth_date' => Carbon::now()->subYears(5)->subMonths(2),
+                'birth_date' => null,
             ],
             [
                 'name' => 'Dewi Lestari',
                 'gender' => 'female',
-                'birth_date' => Carbon::now()->subYears(4)->subMonths(9),
+                'birth_date' => null,
             ],
             [
                 'name' => 'Rizki Pratama',
                 'gender' => 'male',
-                'birth_date' => Carbon::now()->subYears(5)->subMonths(1),
+                'birth_date' => null,
             ],
 
             // Kelompok B (5-6 tahun)
             [
                 'name' => 'Putri Ayu',
                 'gender' => 'female',
-                'birth_date' => Carbon::now()->subYears(5)->subMonths(8),
+                'birth_date' => null,
             ],
             [
                 'name' => 'Dika Maulana',
                 'gender' => 'male',
-                'birth_date' => Carbon::now()->subYears(6)->subMonths(2),
+                'birth_date' => null,
             ],
             [
                 'name' => 'Sari Indah',
                 'gender' => 'female',
-                'birth_date' => Carbon::now()->subYears(5)->subMonths(11),
+                'birth_date' => null,
             ],
             [
                 'name' => 'Fajar Nugroho',
                 'gender' => 'male',
-                'birth_date' => Carbon::now()->subYears(6)->subMonths(4),
+                'birth_date' => null,
             ],
             [
                 'name' => 'Maya Sari',
                 'gender' => 'female',
-                'birth_date' => Carbon::now()->subYears(5)->subMonths(7),
+                'birth_date' => null,
             ],
 
             // Kelompok Bermain
             [
                 'name' => 'Rafi Aditya',
                 'gender' => 'male',
-                'birth_date' => Carbon::now()->subYears(4)->subMonths(1),
+                'birth_date' => null,
             ],
             [
                 'name' => 'Luna Putri',
                 'gender' => 'female',
-                'birth_date' => Carbon::now()->subYears(4)->subMonths(4),
+                'birth_date' => null,
             ],
             [
                 'name' => 'Arif Rahman',
                 'gender' => 'male',
-                'birth_date' => Carbon::now()->subYears(4)->subMonths(8),
+                'birth_date' => null,
             ],
             [
                 'name' => 'Zahra Fitri',
                 'gender' => 'female',
-                'birth_date' => Carbon::now()->subYears(4)->subMonths(2),
+                'birth_date' => null,
             ],
             [
                 'name' => 'Iqbal Ramadhan',
                 'gender' => 'male',
-                'birth_date' => Carbon::now()->subYears(4)->subMonths(5),
+                'birth_date' => null,
             ],
         ];
 

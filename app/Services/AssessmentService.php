@@ -71,20 +71,24 @@ class AssessmentService
         // Determine aspect category based on threshold
         $aspectCategory = $threshold ? $threshold->categorize($correctAnswers) : 'kurang';
 
-        // Create result record
-        return AssessmentResult::create([
-            'session_id' => $session->id,
-            'aspect_id' => $aspect->id,
-            'total_questions' => $totalQuestions,
-            'correct_answers' => $correctAnswers,
-            'aspect_category' => $aspectCategory,
-        ]);
+        // Use updateOrCreate to prevent duplicate results for the same aspect in the same session
+        return AssessmentResult::updateOrCreate(
+            [
+                'session_id' => $session->id,
+                'aspect_id' => $aspect->id,
+            ],
+            [
+                'total_questions' => $totalQuestions,
+                'correct_answers' => $correctAnswers,
+                'aspect_category' => $aspectCategory,
+            ]
+        );
     }
 
     /**
      * Calculate overall maturity category based on aspect categories
      */
-    protected function calculateMaturityCategory(array $results): string
+    public function calculateMaturityCategory(array $results): string
     {
         $categories = collect($results)->pluck('aspect_category');
         

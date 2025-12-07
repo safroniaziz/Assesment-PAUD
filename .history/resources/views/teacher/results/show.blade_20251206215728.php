@@ -100,15 +100,7 @@
                                                 'kurang_matang' => ['bg' => 'bg-yellow-100', 'text' => 'text-yellow-800', 'label' => 'Kurang Matang'],
                                                 'tidak_matang' => ['bg' => 'bg-red-100', 'text' => 'text-red-800', 'label' => 'Tidak Matang'],
                                             ];
-
-                                            // Jika session sudah completed tapi maturity_category null, berarti belum dihitung
-                                            if ($session->completed_at && !$session->maturity_category) {
-                                                $badge = ['bg' => 'bg-gray-100', 'text' => 'text-gray-800', 'label' => 'Belum Dihitung'];
-                                            } elseif (!$session->completed_at) {
-                                                $badge = ['bg' => 'bg-gray-100', 'text' => 'text-gray-800', 'label' => 'Belum Selesai'];
-                                            } else {
-                                                $badge = $maturityBadge[$session->maturity_category] ?? ['bg' => 'bg-gray-100', 'text' => 'text-gray-800', 'label' => 'Tidak Diketahui'];
-                                            }
+                                            $badge = $maturityBadge[$session->maturity_category] ?? ['bg' => 'bg-gray-100', 'text' => 'text-gray-800', 'label' => '-'];
                                         @endphp
                                         <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold {{ $badge['bg'] }} {{ $badge['text'] }}">
                                             {{ $badge['label'] }}
@@ -184,18 +176,7 @@
                                                                     'cukup' => ['bg' => 'bg-blue-100', 'text' => 'text-blue-700', 'label' => 'Cukup', 'icon' => '~'],
                                                                     'kurang' => ['bg' => 'bg-red-100', 'text' => 'text-red-700', 'label' => 'Kurang', 'icon' => '✗'],
                                                                 ];
-
-                                                                // If aspect_category is null, try to calculate it
-                                                                if (!$result->aspect_category && $result->correct_answers !== null) {
-                                                                    $threshold = \App\Models\AspectThreshold::where('aspect_id', $result->aspect_id)->first();
-                                                                    if ($threshold) {
-                                                                        $calculatedCategory = $threshold->categorize($result->correct_answers);
-                                                                        $result->aspect_category = $calculatedCategory;
-                                                                        $result->save();
-                                                                    }
-                                                                }
-
-                                                                $catBadge = $categoryBadge[$result->aspect_category] ?? ['bg' => 'bg-gray-100', 'text' => 'text-gray-700', 'label' => 'Belum Dihitung', 'icon' => '?'];
+                                                                $catBadge = $categoryBadge[$result->aspect_category] ?? ['bg' => 'bg-gray-100', 'text' => 'text-gray-700', 'label' => '-', 'icon' => '?'];
                                                             @endphp
                                                             <div class="group relative {{ $color['bg'] }} rounded-xl p-4 border-2 {{ $color['border'] }} hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
                                                                 <div class="absolute top-2 right-2 bg-gradient-to-br {{ $color['from'] }} {{ $color['to'] }} rounded-full w-8 h-8 flex items-center justify-center shadow-md">
@@ -227,83 +208,17 @@
                                                 </div>
                                             </div>
 
-                                            <!-- Aspect-Level Recommendations -->
-                                            <div class="bg-white rounded-xl shadow-sm border border-gray-200 mt-6">
-                                                <div class="border-b border-gray-200 bg-gradient-to-r from-green-50 to-teal-50 px-6 py-4">
-                                                    <div class="flex items-center gap-3">
-                                                        <div class="w-10 h-10 bg-gradient-to-br from-green-500 to-teal-500 rounded-full flex items-center justify-center shadow-md">
-                                                            <i class="fas fa-lightbulb text-white text-lg"></i>
+                                            @if($session->recommendation)
+                                                <div class="bg-white rounded-lg p-4 border-l-4 border-purple-500">
+                                                    <div class="flex items-start">
+                                                        <i class="fas fa-lightbulb text-yellow-500 text-xl mr-3 mt-1"></i>
+                                                        <div>
+                                                            <h5 class="text-sm font-semibold text-gray-800 mb-1">Rekomendasi</h5>
+                                                            <p class="text-xs text-gray-600 leading-relaxed">{{ $session->recommendation->recommendation_text }}</p>
                                                         </div>
-                                                        <span class="text-md font-bold bg-gradient-to-r from-green-600 to-teal-600 bg-clip-text text-transparent">
-                                                            Rekomendasi Per Aspek
-                                                        </span>
                                                     </div>
                                                 </div>
-                                                
-                                                <div class="p-6 space-y-4">
-                                                    @foreach($uniqueResults as $result)
-                                                        @php
-                                                            $recommendation = $result->getRecommendation();
-                                                        @endphp
-                                                        
-                                                        @if($recommendation)
-                                                            <div class="bg-gradient-to-r from-gray-50 to-white rounded-lg border-l-4 border-green-500 p-5">
-                                                                <!-- Aspect Header -->
-                                                                <div class="flex items-center justify-between mb-3">
-                                                                    <h5 class="text-sm font-bold text-gray-800">{{ $result->aspect->name }}</h5>
-                                                                    @php
-                                                                        $categoryBadge = [
-                                                                            'matang' => ['bg' => 'bg-green-100', 'text' => 'text-green-700', 'label' => 'Matang'],
-                                                                            'cukup_matang' => ['bg' => 'bg-blue-100', 'text' => 'text-blue-700', 'label' => 'Cukup Matang'],
-                                                                            'kurang_matang' => ['bg' => 'bg-yellow-100', 'text' => 'text-yellow-700', 'label' => 'Kurang Matang'],
-                                                                            'tidak_matang' => ['bg' => 'bg-red-100', 'text' => 'text-red-700', 'label' => 'Tidak Matang'],
-                                                                        ];
-                                                                        $badge = $categoryBadge[$result->aspect_category] ?? ['bg' => 'bg-gray-100', 'text' => 'text-gray-700', 'label' => '-'];
-                                                                    @endphp
-                                                                    <span class="px-2 py-1 rounded-full text-xs font-semibold {{ $badge['bg'] }} {{ $badge['text'] }}">
-                                                                        {{ $badge['label'] }}
-                                                                    </span>
-                                                                </div>
-                                                                
-                                                                <!-- Analysis Notes -->
-                                                                @if($recommendation->analysis_notes)
-                                                                    <div class="mb-3">
-                                                                        <p class="text-xs font-semibold text-gray-700 mb-1"><i class="fas fa-clipboard-check text-purple-500 mr-1"></i> Catatan Analisa:</p>
-                                                                        <p class="text-xs text-gray-600 leading-relaxed">{{ $recommendation->analysis_notes }}</p>
-                                                                    </div>
-                                                                @endif
-                                                                
-                                                                <!-- Recommendations -->
-                                                                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                                                                    <!-- For Child -->
-                                                                    @if($recommendation->recommendation_for_child)
-                                                                        <div class="bg-blue-50 rounded-lg p-3 border border-blue-100">
-                                                                            <p class="text-xs font-bold text-blue-700 mb-1"><i class="fas fa-child mr-1"></i> Untuk Anak:</p>
-                                                                            <p class="text-xs text-blue-600 leading-relaxed">{{ $recommendation->recommendation_for_child }}</p>
-                                                                        </div>
-                                                                    @endif
-                                                                    
-                                                                    <!-- For Teacher -->
-                                                                    @if($recommendation->recommendation_for_teacher)
-                                                                        <div class="bg-purple-50 rounded-lg p-3 border border-purple-100">
-                                                                            <p class="text-xs font-bold text-purple-700 mb-1"><i class="fas fa-chalkboard-teacher mr-1"></i> Untuk Guru:</p>
-                                                                            <p class="text-xs text-purple-600 leading-relaxed">{{ $recommendation->recommendation_for_teacher }}</p>
-                                                                        </div>
-                                                                    @endif
-                                                                    
-                                                                    <!-- For Parent -->
-                                                                    @if($recommendation->recommendation_for_parent)
-                                                                        <div class="bg-pink-50 rounded-lg p-3 border border-pink-100">
-                                                                            <p class="text-xs font-bold text-pink-700 mb-1"><i class="fas fa-users mr-1"></i> Untuk Orangtua:</p>
-                                                                            <p class="text-xs text-pink-600 leading-relaxed">{{ $recommendation->recommendation_for_parent }}</p>
-                                                                        </div>
-                                                                    @endif
-                                                                </div>
-                                                            </div>
-                                                        @endif
-                                                    @endforeach
-                                                </div>
-                                            </div>
+                                            @endif
                                         </div>
                                     </td>
                                 </tr>

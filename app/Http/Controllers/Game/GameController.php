@@ -54,6 +54,10 @@ class GameController extends Controller
     {
         $student = Student::findOrFail($studentId);
 
+        // Initialize age variables
+        $ageYears = 0;
+        $ageMonths = 0;
+
         // If student already has birth_date, calculate age from it
         if ($student->birth_date) {
             $birthDate = \Carbon\Carbon::parse($student->birth_date);

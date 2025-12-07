@@ -32,4 +32,28 @@ class AssessmentResult extends Model
     {
         return $this->belongsTo(AssessmentAspect::class, 'aspect_id');
     }
+
+    /**
+     * Get the recommendation for this result's aspect and maturity level
+     */
+    public function getRecommendation()
+    {
+        if (!$this->aspect_category) {
+            return null;
+        }
+
+        // Map old category names to new maturity level names
+        $categoryMap = [
+            'baik' => 'matang',
+            'cukup' => 'cukup_matang',
+            'kurang' => 'kurang_matang',
+            'tidak_matang' => 'tidak_matang', // already correct
+        ];
+
+        $maturityLevel = $categoryMap[$this->aspect_category] ?? $this->aspect_category;
+
+        return AspectRecommendation::where('aspect_id', $this->aspect_id)
+            ->where('maturity_level', $maturityLevel)
+            ->first();
+    }
 }

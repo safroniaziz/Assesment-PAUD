@@ -18,14 +18,15 @@ class DatabaseSeeder extends Seeder
         $this->call([
             AssessmentAspectSeeder::class,
             AspectThresholdSeeder::class,
+            AspectRecommendationSeeder::class, // New detailed recommendations per aspect
             PsychologistUserSeeder::class,
             TeacherUserSeeder::class,
             ClassRoomSeeder::class,
             StudentSeeder::class,
             ScoringRuleSeeder::class,
-            RecommendationSeeder::class,
+            RecommendationSeeder::class, // Old session-level recommendations (can be removed later)
             QuestionSeeder::class,
-            // AssessmentSampleDataSeeder::class, // Uncomment to seed sample assessment data
+            AssessmentSessionSeeder::class, // Sample assessment data for testing
         ]);
     }
 }

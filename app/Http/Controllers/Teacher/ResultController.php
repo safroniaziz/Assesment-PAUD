@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Student;
 use App\Models\AssessmentSession;
 use App\Models\User;
+use App\Services\AssessmentService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 
@@ -48,7 +49,46 @@ class ResultController extends Controller
             ->latest()
             ->get();
 
-        // No need for computed values - data is now stored directly in DB
+        // Recalculate maturity_category and aspect_category for sessions that are completed but don't have it
+        $assessmentService = app(AssessmentService::class);
+        foreach ($sessions as $session) {
+            $needsUpdate = false;
+            
+            // Recalculate aspect_category for results that don't have it
+            foreach ($session->results as $result) {
+                if (!$result->aspect_category) {
+                    $threshold = \App\Models\AspectThreshold::where('aspect_id', $result->aspect_id)->first();
+                    if ($threshold) {
+                        $aspectCategory = $threshold->categorize($result->correct_answers);
+                        $result->update(['aspect_category' => $aspectCategory]);
+                        $needsUpdate = true;
+                    }
+                }
+            }
+            
+            // Recalculate maturity_category if needed
+            if (!$session->maturity_category && $session->results->count() > 0) {
+                $results = $session->results->all();
+                if (count($results) > 0) {
+                    $maturityCategory = $assessmentService->calculateMaturityCategory($results);
+                    $session->update(['maturity_category' => $maturityCategory]);
+                    $needsUpdate = true;
+                }
+            } elseif ($needsUpdate) {
+                // If aspect_category was updated, recalculate maturity_category
+                $results = $session->results->all();
+                if (count($results) > 0) {
+                    $maturityCategory = $assessmentService->calculateMaturityCategory($results);
+                    $session->update(['maturity_category' => $maturityCategory]);
+                }
+            }
+            
+            if ($needsUpdate) {
+                $session->refresh();
+                $session->load('results.aspect');
+            }
+        }
+
         return view('teacher.results.show', compact('student', 'sessions'));
     }
 
