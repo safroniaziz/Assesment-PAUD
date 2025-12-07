@@ -205,6 +205,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Top Students Chart - Line Chart with Maturity Categories
     const topCtx = document.getElementById('topStudentsChart').getContext('2d');
     const topData = {!! json_encode($topStudents) !!};
+    
+    // Limit to last 10 for readability
+    const limitedData = topData.slice(-10);
 
     // Color mapping for maturity categories
     const maturityColors = {
@@ -217,45 +220,47 @@ document.addEventListener('DOMContentLoaded', function() {
     new Chart(topCtx, {
         type: 'line',
         data: {
-            labels: topData.map(s => s.name),
+            labels: limitedData.map(s => s.name.length > 15 ? s.name.substring(0, 12) + '...' : s.name),
             datasets: [{
                 label: 'Kategori Kematangan',
-                data: topData.map(s => s.maturity_value),
-                borderColor: 'rgb(239, 68, 68)',
-                backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                data: limitedData.map(s => s.maturity_value),
+                borderColor: 'rgb(99, 102, 241)',
+                backgroundColor: 'rgba(99, 102, 241, 0.1)',
                 borderWidth: 3,
                 tension: 0.4,
-                pointBackgroundColor: topData.map(s => maturityColors[s.maturity_category] || 'rgb(0, 0, 0)'),
-                pointBorderColor: topData.map(s => maturityColors[s.maturity_category] || 'rgb(0, 0, 0)'),
+                pointBackgroundColor: limitedData.map(s => maturityColors[s.maturity_category] || 'rgb(156, 163, 175)'),
+                pointBorderColor: limitedData.map(s => maturityColors[s.maturity_category] || 'rgb(107, 114, 128)'),
                 pointRadius: 8,
-                pointHoverRadius: 10,
-                fill: false,
-                segment: {
-                    borderColor: ctx => {
-                        // Color the line segment based on the ending point's category
-                        const index = ctx.p1DataIndex;
-                        return topData[index] ? maturityColors[topData[index].maturity_category] : 'rgb(239, 68, 68)';
-                    }
-                }
+                pointHoverRadius: 12,
+                pointBorderWidth: 2,
+                fill: true,
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: true,
-            aspectRatio: 1.5,
+            aspectRatio: 2,
             plugins: {
                 legend: {
                     display: false
                 },
                 tooltip: {
-                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    backgroundColor: 'rgba(0, 0, 0, 0.9)',
                     padding: 12,
+                    titleFont: { size: 13, weight: 'bold' },
+                    bodyFont: { size: 12 },
                     callbacks: {
                         label: function(context) {
-                            const student = topData[context.dataIndex];
+                            const student = limitedData[context.dataIndex];
                             return student.name + ': ' + student.maturity_label;
                         }
                     }
+                },
+                title: {
+                    display: true,
+                    text: '10 Siswa Terakhir',
+                    font: { size: 13, weight: '600' },
+                    padding: { top: 5, bottom: 15 }
                 }
             },
             scales: {
@@ -263,8 +268,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     min: 0,
                     max: 5,
                     grid: {
-                        color: 'rgba(0, 0, 0, 0.1)',
-                        borderDash: [5, 5]
+                        color: 'rgba(0, 0, 0, 0.05)',
+                        borderDash: [3, 3]
                     },
                     ticks: {
                         stepSize: 1,
@@ -272,20 +277,14 @@ document.addEventListener('DOMContentLoaded', function() {
                             const labels = {
                                 0: '',
                                 1: 'Tidak Matang',
-                                2: 'Kurang Matang',
-                                3: 'Cukup Matang',
+                                2: 'Kurang',
+                                3: 'Cukup',
                                 4: 'Matang',
                                 5: ''
                             };
                             return labels[value] || '';
-                        }
-                    },
-                    title: {
-                        display: true,
-                        text: 'Kategori Kematangan',
-                        font: {
-                            size: 12
-                        }
+                        },
+                        font: { size: 10 }
                     }
                 },
                 x: {
@@ -294,14 +293,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     },
                     ticks: {
                         maxRotation: 45,
-                        minRotation: 45
-                    },
-                    title: {
-                        display: true,
-                        text: 'Nama Siswa',
-                        font: {
-                            size: 12
-                        }
+                        minRotation: 45,
+                        font: { size: 10 }
                     }
                 }
             }

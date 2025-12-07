@@ -22,12 +22,13 @@ class DatabaseSeeder extends Seeder
             PsychologistUserSeeder::class,
             TeacherUserSeeder::class,
             TeamMemberSeeder::class, // Team collaboration members
-            ClassRoomSeeder::class,
-            StudentSeeder::class,
+            // ClassRoomSeeder::class, // Disabled - using classes from JSON
+            // StudentSeeder::class, // Disabled - using students from JSON
             ScoringRuleSeeder::class,
             RecommendationSeeder::class, // Old session-level recommendations (can be removed later)
             QuestionSeeder::class,
-            AssessmentSessionSeeder::class, // Sample assessment data for testing
+            AssessmentDataSeeder::class, // Import real assessment data from JSON
+            // AssessmentSessionSeeder::class, // Disabled - using sessions from JSON
             LandingSettingSeeder::class, // New seeder for landing page content
         ]);
     }

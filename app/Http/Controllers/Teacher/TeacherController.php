@@ -73,28 +73,41 @@ class TeacherController extends Controller
             $q->where('teacher_id', $teacher->id);
         })->whereNull('completed_at')->count();
 
-        // Semua siswa dengan kategori kematangan
-        $topStudents = AssessmentSession::whereHas('student.classRoom', function($q) use ($teacher) {
-                $q->where('teacher_id', $teacher->id);
-            })
-            ->whereNotNull('completed_at')
-            ->whereNotNull('maturity_category')
-            ->with('student')
-            ->latest('completed_at')
-            ->get()
-            ->map(function($session) {
-                $maturityOrder = [
-                    'matang' => 4,
-                    'cukup_matang' => 3,
-                    'kurang_matang' => 2,
-                    'tidak_matang' => 1,
-                ];
-                $maturityLabels = [
-                    'matang' => 'Matang',
-                    'cukup_matang' => 'Cukup Matang',
-                    'kurang_matang' => 'Kurang Matang',
-                    'tidak_matang' => 'Tidak Matang',
-                ];
+        // Get diverse students from different maturity categories
+        $topStudents = collect();
+        
+        // Get students from each maturity category (mix untuk variasi visual)
+        $categories = ['matang', 'cukup_matang', 'kurang_matang', 'tidak_matang'];
+        foreach ($categories as $category) {
+            $students = AssessmentSession::whereHas('student.classRoom', function($q) use ($teacher) {
+                    $q->where('teacher_id', $teacher->id);
+                })
+                ->whereNotNull('completed_at')
+                ->where('maturity_category', $category)
+                ->with('student')
+                ->latest('completed_at')
+                ->take(3) // Ambil 3 per kategori
+                ->get();
+            
+            $topStudents = $topStudents->merge($students);
+        }
+        
+        // Map ke format chart
+        $maturityOrder = [
+            'matang' => 4,
+            'cukup_matang' => 3,
+            'kurang_matang' => 2,
+            'tidak_matang' => 1,
+        ];
+        $maturityLabels = [
+            'matang' => 'Matang',
+            'cukup_matang' => 'Cukup Matang',
+            'kurang_matang' => 'Kurang Matang',
+            'tidak_matang' => 'Tidak Matang',
+        ];
+        
+        $topStudents = $topStudents
+            ->map(function($session) use ($maturityOrder, $maturityLabels) {
                 return [
                     'name' => $session->student->name,
                     'maturity_category' => $session->maturity_category,
@@ -102,7 +115,7 @@ class TeacherController extends Controller
                     'maturity_value' => $maturityOrder[$session->maturity_category] ?? 0,
                 ];
             })
-            ->unique('name') // One session per student (latest)
+            ->shuffle() // Acak urutannya
             ->values();
 
         // Distribusi kategori kematangan siswa
